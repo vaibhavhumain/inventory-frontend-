@@ -1,19 +1,23 @@
 "use client";
+export const dynamic = "force-dynamic";
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import API from "../../../utils/api";
 import { saveAuth, getToken, clearAuth } from "../../../utils/auth";
 
 export default function Login() {
   const router = useRouter();
-  const sp = useSearchParams();
-  const justRegistered = useMemo(() => sp.get("registered") === "1", [sp]);
-
+  const [justRegistered, setJustRegistered] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setJustRegistered(params.get("registered") === "1");
+  }, []);
 
   useEffect(() => {
     const verify = async () => {
