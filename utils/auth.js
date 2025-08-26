@@ -8,7 +8,7 @@ export function saveAuth(data) {
     role: data.role,
   }));
 }
-
+  
 export function getToken() {
   return localStorage.getItem("token");
 }
