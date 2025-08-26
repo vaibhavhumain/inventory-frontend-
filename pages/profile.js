@@ -1,4 +1,5 @@
-    import { useEffect, useState } from "react";
+'use client';
+import { useEffect, useState } from "react";
 import API from "../utils/api";
 import { getToken, clearAuth } from "../utils/auth";
 import { useRouter } from "next/navigation";
