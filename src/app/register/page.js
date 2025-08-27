@@ -42,7 +42,7 @@ export default function Register() {
               <span className="text-xl">🧾</span>
             </div>
             <h1 className="mt-3 text-2xl font-bold text-gray-900">Create your account</h1>
-            <p className="text-gray-500 mt-1">Register to continue to Stock Ledger</p>
+            <p className="text-gray-500 mt-1">Register to continue </p>
           </div>
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4">

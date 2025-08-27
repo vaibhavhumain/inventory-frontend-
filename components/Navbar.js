@@ -22,10 +22,11 @@ export default function Navbar() {
     <nav className="bg-white shadow sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-14 items-center">
+          {/* Logo + Brand */}
           <div className="flex items-center gap-2">
             <Link href="/dashboard" className="flex items-center gap-2">
               <Image
-                src="/logo.png"     
+                src="/logo.png"
                 alt="Stock Ledger Logo"
                 width={32}
                 height={32}
@@ -35,17 +36,19 @@ export default function Navbar() {
             </Link>
           </div>
 
+          {/* Menu Links */}
           <div className="hidden sm:flex items-center gap-6">
             <Link href="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium">Dashboard</Link>
             <Link href="/feed" className="text-gray-700 hover:text-blue-600 font-medium">Feed Stock</Link>
             <Link href="/issue" className="text-gray-700 hover:text-blue-600 font-medium">Issue Stock</Link>
-            <Link href="/reports" className="text-gray-700 hover:text-blue-600 font-medium">Reports</Link>
+            <Link href="/items" className="text-gray-700 hover:text-blue-600 font-medium">Items</Link> {/* ✅ New Tab */}
           </div>
 
+          {/* User Info + Logout */}
           <div className="flex items-center gap-4">
             {user && (
               <span className="hidden sm:block text-sm text-gray-600">
-                👤 {user.name} ({user.role})
+                👤 {user.name} <code>({user.role}@GC)</code>
               </span>
             )}
             <button
