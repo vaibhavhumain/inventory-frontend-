@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function SearchBar({ onSearch, placeholder = "Search..." }) {
   const [query, setQuery] = useState("");
@@ -8,14 +8,21 @@ export default function SearchBar({ onSearch, placeholder = "Search..." }) {
     setQuery(e.target.value);
   };
 
-  const handleSearch = () => {
-    onSearch(query); 
-  };
-
   const handleClear = () => {
     setQuery("");     
     onSearch("");     
   };
+
+  // Auto search with debounce (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onSearch(query);
+    }, 300);
+
+    return () => clearTimeout(timer);
+    // only depend on query to avoid infinite loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
 
   return (
     <div className="mb-6 flex justify-center gap-2">
@@ -26,12 +33,6 @@ export default function SearchBar({ onSearch, placeholder = "Search..." }) {
         placeholder={placeholder}
         className="w-full max-w-md px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
       />
-      <button
-        onClick={handleSearch}
-        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-      >
-        Search
-      </button>
       <button
         onClick={handleClear}
         className="px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500"
