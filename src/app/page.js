@@ -29,7 +29,7 @@ export default function Landing() {
       </div>
 
       <footer className="mt-16 text-sm text-gray-500">
-        © {new Date().getFullYear()} Inventory Manager. All rights reserved.
+        © {new Date().getFullYear()} Vaibhav. All rights reserved.
       </footer>
     </div>
   );
