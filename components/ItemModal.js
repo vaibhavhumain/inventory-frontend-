@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import API from "../utils/api";
 
 export default function ItemModal({ item, onClose, onSave }) {
-  // ✅ initialize with actual backend values, don’t reset to 0 unless missing
   const [formData, setFormData] = useState({
     ...item,
     mainStoreQty: item.mainStoreQty ?? 0,
@@ -19,31 +18,32 @@ export default function ItemModal({ item, onClose, onSave }) {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // ✅ Add entered qty to selected store (increment properly)
-  const handleAddStock = () => {
-    const qtyToAdd = Number(formData.addQty) || 0;
-    if (!formData.targetStore || qtyToAdd <= 0) return;
+const handleAddStock = () => {
+  const qtyToAdd = Number(formData.addQty) || 0;
+  if (!formData.targetStore || qtyToAdd <= 0) return;
 
-    let newMain = formData.mainStoreQty;
-    let newSub = formData.subStoreQty;
+  let newMain = formData.mainStoreQty;
+  let newSub = formData.subStoreQty;
+  let newTotal = formData.closingQty; // take existing total, not reset
 
-    if (formData.targetStore === "Main Store") {
-      newMain = newMain + qtyToAdd; // increment main store
-    } else if (formData.targetStore === "Sub Store") {
-      newSub = newSub + qtyToAdd; // increment sub store
-    }
+  if (formData.targetStore === "Main Store") {
+    newMain += qtyToAdd;
+    newTotal += qtyToAdd; // increment total too
+  } else if (formData.targetStore === "Sub Store") {
+    newSub += qtyToAdd;
+    newTotal += qtyToAdd; // increment total too
+  }
 
-    const newTotal = newMain + newSub;
+  setFormData((prev) => ({
+    ...prev,
+    mainStoreQty: newMain,
+    subStoreQty: newSub,
+    closingQty: newTotal, 
+    addQty: "",
+    targetStore: "",
+  }));
+};
 
-    setFormData((prev) => ({
-      ...prev,
-      mainStoreQty: newMain,
-      subStoreQty: newSub,
-      closingQty: newTotal, // keep correct total
-      addQty: "", // reset input
-      targetStore: "", // reset dropdown
-    }));
-  };
 
   const handleSave = async () => {
     try {

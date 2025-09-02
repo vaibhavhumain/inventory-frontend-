@@ -1,6 +1,6 @@
 "use client";
 export const dynamic = "force-dynamic";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import API from "../../../utils/api";
@@ -33,11 +33,13 @@ export default function Login() {
     verify();
   }, [router]);
 
-  const onChange = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  const onChange = (e) =>
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    setErr(""); setLoading(true);
+    setErr("");
+    setLoading(true);
     try {
       const { data } = await API.post("/auth/login", form);
       saveAuth(data);
@@ -50,46 +52,71 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <div className="backdrop-blur bg-white/70 border border-white/50 shadow-xl rounded-2xl p-6">
+    <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 animate-gradient">
+      <div className="relative w-full max-w-md">
+        <div className="absolute inset-0 blur-2xl bg-gradient-to-tr from-blue-400/40 to-purple-400/40 rounded-3xl"></div>
+
+        <div className="relative backdrop-blur-xl bg-white/80 border border-white/30 shadow-2xl rounded-3xl p-8">
           <div className="text-center">
-            <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-xl bg-blue-100">
-              <span className="text-xl">🔐</span>
+            <div className="mx-auto h-14 w-14 flex items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-500 to-purple-500 text-white shadow-lg">
+              🔐
             </div>
-            <h1 className="mt-3 text-2xl font-bold text-gray-900">Welcome back</h1>
-            <p className="text-gray-500 mt-1">Login to continue</p>
+            <h1 className="mt-4 text-3xl font-bold text-gray-900">
+              Welcome back
+            </h1>
+            <p className="text-gray-600 mt-1">Log in to continue</p>
           </div>
 
           {justRegistered && (
-            <div className="mt-4 text-sm text-green-700 bg-green-50 border border-green-200 p-2.5 rounded-lg">
-              Account created successfully. Please log in.
+            <div className="mt-5 flex items-center gap-2 text-sm text-green-800 bg-green-50 border border-green-200 p-3 rounded-lg">
+              ✅ <span>Account created successfully. Please log in.</span>
             </div>
           )}
 
-          <form onSubmit={onSubmit} className="mt-6 space-y-4">
+          <form onSubmit={onSubmit} className="mt-6 space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input
-                type="email" name="email" value={form.email} onChange={onChange} required
-                placeholder="you@example.com" autoComplete="email"
-                className="w-full rounded-xl border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  📧
+                </span>
+                <input
+                  type="email"
+                  name="email"
+                  value={form.email}
+                  onChange={onChange}
+                  required
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  className="w-full pl-10 rounded-xl border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
               <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  🔒
+                </span>
                 <input
                   type={showPwd ? "text" : "password"}
-                  name="password" value={form.password} onChange={onChange} required
-                  placeholder="••••••••" autoComplete="current-password"
-                  className="w-full rounded-xl border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-16"
+                  name="password"
+                  value={form.password}
+                  onChange={onChange}
+                  required
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  className="w-full pl-10 pr-20 rounded-xl border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPwd((s) => !s)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-600 px-2 py-1 rounded-lg hover:bg-gray-100"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-blue-600 px-2 py-1 rounded-md hover:bg-blue-50"
                   aria-label={showPwd ? "Hide password" : "Show password"}
                 >
                   {showPwd ? "Hide" : "Show"}
@@ -98,24 +125,30 @@ export default function Login() {
             </div>
 
             {err && (
-              <p className="text-red-600 text-sm border border-red-200 bg-red-50 p-2 rounded-lg">
-                {err}
-              </p>
+              <div className="flex items-center gap-2 text-red-700 text-sm bg-red-50 border border-red-200 p-3 rounded-lg">
+                ⚠️ <span>{err}</span>
+              </div>
             )}
 
             <button
-              type="submit" disabled={loading}
-              className={`w-full py-2.5 rounded-xl font-medium text-white transition ${
-                loading ? "bg-gray-300" : "bg-blue-600 hover:bg-blue-700 shadow"
+              type="submit"
+              disabled={loading}
+              className={`w-full py-3 rounded-xl font-semibold text-white transition transform ${
+                loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-blue-600 to-purple-600 hover:scale-[1.02] shadow-lg hover:shadow-xl"
               }`}
             >
               {loading ? "Logging in..." : "Log In"}
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-600 mt-5">
+          <p className="text-center text-sm text-gray-600 mt-6">
             New here?{" "}
-            <Link href="/register" className="text-blue-600 hover:underline">
+            <Link
+              href="/register"
+              className="text-blue-600 font-medium hover:underline"
+            >
               Create an account
             </Link>
           </p>
@@ -124,3 +157,4 @@ export default function Login() {
     </div>
   );
 }
+ 

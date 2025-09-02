@@ -1,51 +1,181 @@
 "use client";
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
+import API from "../utils/api"; 
+import Navbar from "./Navbar";
 export default function IssueForm() {
-  const [itemName, setItemName] = useState("");
-  const [quantity, setQuantity] = useState("");
+  const [issueNo, setIssueNo] = useState("");
+  const [department, setDepartment] = useState("");
+  const [issuedBy, setIssuedBy] = useState("");
+  const [items, setItems] = useState([{ item: "", quantity: "", rate: "" }]);
+  const [allItems, setAllItems] = useState([]); 
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const { data } = await API.get("/items");
+        setAllItems(data);
+      } catch (err) {
+        console.error("Error fetching items:", err);
+      }
+    };
+    fetchItems();
+  }, []);
+
+  const handleItemChange = (index, field, value) => {
+    const newItems = [...items];
+    newItems[index][field] = value;
+    setItems(newItems);
+  };
+
+  const addItemRow = () => {
+    setItems([...items, { item: "", quantity: "", rate: "" }]);
+  };
+
+  const removeItemRow = (index) => {
+    const newItems = [...items];
+    newItems.splice(index, 1);
+    setItems(newItems);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("https://inventory-backend-o7iw.onrender.com/api/stock/issue", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemName, quantity }),
+      const { data } = await API.post("/issue-bills", {
+        issueNo,
+        issueDate: new Date(),
+        department,
+        issuedBy,
+        items: items.map((it) => ({
+          item: it.item, 
+          quantity: Number(it.quantity),
+          rate: Number(it.rate),
+        })),
       });
-      const data = await res.json();
-      setMessage(data.message || "Stock issued successfully!");
+
+      setMessage("✅ " + (data.message || "Issue Bill created successfully!"));
+      setIssueNo("");
+      setDepartment("");
+      setIssuedBy("");
+      setItems([{ item: "", quantity: "", rate: "" }]);
     } catch (err) {
-      setMessage("Error issuing stock");
+      setMessage(
+        "❌ " + (err.response?.data?.error || "Error creating issue bill")
+      );
     }
   };
 
   return (
-    <div className="p-6 border rounded-lg max-w-md mx-auto mt-8">
-      <h2 className="text-xl font-bold mb-4">Issue Stock</h2>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <input
-          type="text"
-          placeholder="Item Name"
-          value={itemName}
-          onChange={(e) => setItemName(e.target.value)}
-          className="border p-2 rounded"
-          required
-        />
-        <input
-          type="number"
-          placeholder="Quantity"
-          value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
-          className="border p-2 rounded"
-          required
-        />
-        <button type="submit" className="bg-red-600 text-white p-2 rounded">
-          Submit
+    <div>
+      <Navbar/>
+    <div className="p-6 border rounded-lg max-w-2xl mx-auto mt-8 bg-white shadow">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">Issue Stock</h2>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input
+            type="text"
+            placeholder="Issue No"
+            value={issueNo}
+            onChange={(e) => setIssueNo(e.target.value)}
+            className="border p-2 rounded"
+            required
+          />
+          <input
+            type="text"
+            placeholder="Department"
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
+            className="border p-2 rounded"
+            required
+          />
+          <input
+            type="text"
+            placeholder="Issued By"
+            value={issuedBy}
+            onChange={(e) => setIssuedBy(e.target.value)}
+            className="border p-2 rounded"
+            required
+          />
+          <input
+            type="date"
+            value={new Date().toISOString().split("T")[0]}
+            className="border p-2 rounded bg-gray-100"
+            disabled
+          />
+        </div>
+
+        <div>
+          <h3 className="font-semibold text-gray-700 mb-2">Items</h3>
+          {items.map((it, index) => (
+            <div
+              key={index}
+              className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3"
+            >
+              <select
+                value={it.item}
+                onChange={(e) => handleItemChange(index, "item", e.target.value)}
+                className="border p-2 rounded"
+                required
+              >
+                <option value="">Select Item</option>
+                {allItems.map((item) => (
+                  <option key={item._id} value={item._id}>
+                    {item.code} - {item.description}
+                  </option>
+                ))}
+              </select>
+
+              <input
+                type="number"
+                placeholder="Quantity"
+                value={it.quantity}
+                onChange={(e) =>
+                  handleItemChange(index, "quantity", e.target.value)
+                }
+                className="border p-2 rounded"
+                required
+              />
+              <input
+                type="number"
+                placeholder="Rate"
+                value={it.rate}
+                onChange={(e) =>
+                  handleItemChange(index, "rate", e.target.value)
+                }
+                className="border p-2 rounded"
+              />
+              {items.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeItemRow(index)}
+                  className="text-red-600 hover:underline text-sm md:col-span-3 text-left"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addItemRow}
+            className="mt-2 px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 text-sm"
+          >
+            ➕ Add Item
+          </button>
+        </div>
+
+        <button
+          type="submit"
+          className="bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-700 transition"
+        >
+          Submit Issue Bill
         </button>
       </form>
-      {message && <p className="mt-4 text-green-600">{message}</p>}
+
+      {message && (
+        <p className="mt-4 text-center font-medium text-gray-700">{message}</p>
+      )}
+    </div>
     </div>
   );
 }
