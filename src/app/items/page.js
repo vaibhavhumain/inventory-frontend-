@@ -4,7 +4,7 @@ import Navbar from "../../../components/Navbar";
 import API from "../../../utils/api";
 import SearchBar from "../../../components/SearchBar";
 import AddItemForm from "../../../components/AddItemForm";
-import ItemModal from "../../../components/ItemModal";   // modal component
+import ItemModal from "../../../components/ItemModal"; // modal component
 import { FiSearch } from "react-icons/fi";
 import Link from "next/link";
 
@@ -18,6 +18,9 @@ export default function ItemsPage() {
 
   const [expandedRow, setExpandedRow] = useState(null);
   const [historyData, setHistoryData] = useState({});
+
+  // 🔴 Threshold for low stock
+  const LOW_STOCK_THRESHOLD = 10;
 
   // Fetch items
   useEffect(() => {
@@ -115,191 +118,218 @@ export default function ItemsPage() {
     }
   };
 
-return (
-  <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100">
-    <Navbar />
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100">
+      <Navbar />
 
-    <div className="max-w-[95%] mx-auto px-4 py-8">
-      {/* header */}
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex gap-3">
-          <button
-            onClick={() => setShowSearch((prev) => !prev)}
-            className="p-2 rounded-lg bg-white shadow hover:bg-blue-50 transition"
-          >
-            <FiSearch className="text-xl text-blue-700" />
-          </button>
+      <div className="max-w-[95%] mx-auto px-4 py-8">
+        {/* header */}
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowSearch((prev) => !prev)}
+              className="p-2 rounded-lg bg-white shadow hover:bg-blue-50 transition"
+            >
+              <FiSearch className="text-xl text-blue-700" />
+            </button>
 
-          <button
-            onClick={() => setShowForm(true)}
-            className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow hover:shadow-md transition"
-          >
-            ➕ Add
-          </button>
+            <button
+              onClick={() => setShowForm(true)}
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow hover:shadow-md transition"
+            >
+              ➕ Add
+            </button>
 
-          <Link
-            href="/items/edit"
-            className="px-4 py-2 rounded-lg bg-gradient-to-r from-green-600 to-green-700 text-white shadow hover:shadow-md transition"
-          >
-            ✏️ Edit
-          </Link>
-        </div>
-      </div>
-
-      {/* Search */}
-      {showSearch && (
-        <div className="mb-6">
-          <SearchBar onSearch={handleSearch} />
-        </div>
-      )}
-
-      {/* table */}
-      {loading ? (
-        <div className="flex justify-center items-center h-80">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      ) : (
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-          <div className="overflow-y-auto max-h-[600px]">
-            <table className="w-full text-sm text-gray-700">
-              <thead className="bg-gradient-to-r from-blue-600 to-blue-500 text-white text-xs uppercase sticky top-0 z-10 shadow">
-                <tr>
-                  <th className="px-6 py-3 text-left">Sr No</th>
-                  <th className="px-6 py-3 text-left">Code</th>
-                  <th className="px-6 py-3 text-left">Category</th>
-                  <th className="px-6 py-3 text-left">Description</th>
-                  <th className="px-6 py-3 text-left">Plant Name</th>
-                  <th className="px-6 py-3 text-left">Weight</th>
-                  <th className="px-6 py-3 text-left">Unit</th>
-                  <th className="px-6 py-3 text-left">Quantity</th>
-                  <th className="px-6 py-3 text-left">Main Store</th>
-                  <th className="px-6 py-3 text-left">Sub Store</th>
-                  <th className="px-6 py-3 text-left">Remarks</th>
-                  <th className="px-6 py-3 text-left">History</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredItems.map((item, index) => (
-                  <React.Fragment key={item._id || item.code || index}>
-                    <tr
-                      onClick={() => {
-                        const { _id, __v, ...rest } = item;
-                        setSelectedItem(rest);
-                      }}
-                      className="hover:bg-blue-50 transition duration-200 cursor-pointer"
-                    >
-                      <td className="px-6 py-3 font-semibold text-gray-900">
-                        {index + 1}
-                      </td>
-                      <td className="px-6 py-3 font-semibold text-blue-700">
-                        {item.code || "-"}
-                      </td>
-                      <td className="px-6 py-3 capitalize">{item.category}</td>
-                      <td className="px-6 py-3 max-w-[250px] truncate text-gray-600">
-                        {item.description}
-                      </td>
-                      <td className="px-6 py-3">{item.plantName || "-"}</td>
-                      <td className="px-6 py-3">{item.weight || "-"}</td>
-                      <td className="px-6 py-3">{item.unit || "-"}</td>
-                      <td className="px-6 py-3 font-medium">
-                        {item.closingQty || "-"}
-                      </td>
-                      <td className="px-6 py-3">{item.mainStoreQty || 0}</td>
-                      <td className="px-6 py-3">{item.subStoreQty || 0}</td>
-                      <td className="px-6 py-3 capitalize text-gray-500">
-                        {item.remarks || "-"}
-                      </td>
-                      <td
-                        className="px-6 py-3"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <button
-                          onClick={() => toggleHistory(item.code)}
-                          className="text-blue-600 hover:underline text-sm font-medium"
-                        >
-                          {expandedRow === item.code ? "Hide" : "View"}
-                        </button>
-                      </td>
-                    </tr>
-
-                    {expandedRow === item.code && (
-                      <tr className="bg-gray-50">
-                        <td colSpan="12" className="px-6 py-4">
-                          <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
-                            📊 Stock History
-                          </h3>
-                          <div className="rounded-lg border border-gray-200 overflow-hidden">
-                            <table className="w-full text-xs">
-                              <thead className="bg-gray-100 text-gray-700">
-                                <tr>
-                                  <th className="px-2 py-2 text-left">Date</th>
-                                  <th className="px-2 py-2 text-left">In</th>
-                                  <th className="px-2 py-2 text-left">Out</th>
-                                  <th className="px-2 py-2 text-left">
-                                    Closing Qty
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {(historyData[item.code] || []).map((h, i) => (
-                                  <tr
-                                    key={i}
-                                    className="hover:bg-gray-100 transition"
-                                  >
-                                    <td className="px-2 py-2">
-                                      {new Date(
-                                        h.date
-                                      ).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-2 py-2 text-green-600 font-medium">
-                                      {h.in}
-                                    </td>
-                                    <td className="px-2 py-2 text-red-600 font-medium">
-                                      {h.out}
-                                    </td>
-                                    <td className="px-2 py-2 text-gray-800">
-                                      {h.closingQty}
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
+            <Link
+              href="/items/edit"
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-green-600 to-green-700 text-white shadow hover:shadow-md transition"
+            >
+              ✏️ Edit
+            </Link>
           </div>
         </div>
-      )}
 
-      {showForm && (
-        <AddItemForm
-          onClose={() => setShowForm(false)}
-          onSave={handleSaveItem}
-        />
-      )}
+        {/* 🔴 Global Low Stock Alert */}
+        {filteredItems.some((it) => it.closingQty < LOW_STOCK_THRESHOLD) && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg shadow">
+            ⚠️ Low stock alert for:{" "}
+            {filteredItems
+              .filter((it) => it.closingQty < LOW_STOCK_THRESHOLD)
+              .map((it) => it.code)
+              .join(", ")}
+          </div>
+        )}
 
-      {/* modal component usage */}
-      {selectedItem && (
-        <ItemModal
-          item={selectedItem}
-          onClose={() => setSelectedItem(null)}
-          onSave={(updated) => {
-            const { _id, __v, ...clean } = updated;
-            setItems((prev) =>
-              prev.map((it) => (it.code === clean.code ? clean : it))
-            );
-            setFilteredItems((prev) =>
-              prev.map((it) => (it.code === clean.code ? clean : it))
-            );
-          }}
-        />
-      )}
+        {/* Search */}
+        {showSearch && (
+          <div className="mb-6">
+            <SearchBar onSearch={handleSearch} />
+          </div>
+        )}
+
+        {/* table */}
+        {loading ? (
+          <div className="flex justify-center items-center h-80">
+            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+            <div className="overflow-y-auto max-h-[600px]">
+              <table className="w-full text-sm text-gray-700">
+                <thead className="bg-gradient-to-r from-blue-600 to-blue-500 text-white text-xs uppercase sticky top-0 z-10 shadow">
+                  <tr>
+                    <th className="px-6 py-3 text-left">Sr No</th>
+                    <th className="px-6 py-3 text-left">Code</th>
+                    <th className="px-6 py-3 text-left">Category</th>
+                    <th className="px-6 py-3 text-left">Description</th>
+                    <th className="px-6 py-3 text-left">Plant Name</th>
+                    <th className="px-6 py-3 text-left">Weight</th>
+                    <th className="px-6 py-3 text-left">Unit</th>
+                    <th className="px-6 py-3 text-left">Quantity</th>
+                    <th className="px-6 py-3 text-left">Main Store</th>
+                    <th className="px-6 py-3 text-left">Sub Store</th>
+                    <th className="px-6 py-3 text-left">Remarks</th>
+                    <th className="px-6 py-3 text-left">History</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {filteredItems.map((item, index) => (
+                    <React.Fragment key={item._id || item.code || index}>
+                      <tr
+                        onClick={() => {
+                          const { _id, __v, ...rest } = item;
+                          setSelectedItem(rest);
+                        }}
+                        className="hover:bg-blue-50 transition duration-200 cursor-pointer"
+                      >
+                        <td className="px-6 py-3 font-semibold text-gray-900">
+                          {index + 1}
+                        </td>
+                        <td className="px-6 py-3 font-semibold text-blue-700">
+                          {item.code || "-"}
+                        </td>
+                        <td className="px-6 py-3 capitalize">{item.category}</td>
+                        <td className="px-6 py-3 max-w-[250px] truncate text-gray-600">
+                          {item.description}
+                        </td>
+                        <td className="px-6 py-3">{item.plantName || "-"}</td>
+                        <td className="px-6 py-3">{item.weight || "-"}</td>
+                        <td className="px-6 py-3">{item.unit || "-"}</td>
+
+                        {/* 🔴 Low Stock Highlight */}
+                        <td
+                          className={`px-6 py-3 font-medium ${
+                            item.closingQty < LOW_STOCK_THRESHOLD
+                              ? "text-red-600 font-bold"
+                              : "text-gray-800"
+                          }`}
+                        >
+                          {item.closingQty || "-"}
+                          {item.closingQty < LOW_STOCK_THRESHOLD && (
+                            <span className="ml-2 px-2 py-0.5 text-xs rounded bg-red-100 text-red-600">
+                              Low
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="px-6 py-3">{item.mainStoreQty || 0}</td>
+                        <td className="px-6 py-3">{item.subStoreQty || 0}</td>
+                        <td className="px-6 py-3 capitalize text-gray-500">
+                          {item.remarks || "-"}
+                        </td>
+                        <td
+                          className="px-6 py-3"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            onClick={() => toggleHistory(item.code)}
+                            className="text-blue-600 hover:underline text-sm font-medium"
+                          >
+                            {expandedRow === item.code ? "Hide" : "View"}
+                          </button>
+                        </td>
+                      </tr>
+
+                      {expandedRow === item.code && (
+                        <tr className="bg-gray-50">
+                          <td colSpan="12" className="px-6 py-4">
+                            <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
+                              📊 Stock History
+                            </h3>
+                            <div className="rounded-lg border border-gray-200 overflow-hidden">
+                              <table className="w-full text-xs">
+                                <thead className="bg-gray-100 text-gray-700">
+                                  <tr>
+                                    <th className="px-2 py-2 text-left">Date</th>
+                                    <th className="px-2 py-2 text-left">In</th>
+                                    <th className="px-2 py-2 text-left">Out</th>
+                                    <th className="px-2 py-2 text-left">
+                                      Closing Qty
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {(historyData[item.code] || []).map(
+                                    (h, i) => (
+                                      <tr
+                                        key={i}
+                                        className="hover:bg-gray-100 transition"
+                                      >
+                                        <td className="px-2 py-2">
+                                          {new Date(
+                                            h.date
+                                          ).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-2 py-2 text-green-600 font-medium">
+                                          {h.in}
+                                        </td>
+                                        <td className="px-2 py-2 text-red-600 font-medium">
+                                          {h.out}
+                                        </td>
+                                        <td className="px-2 py-2 text-gray-800">
+                                          {h.closingQty}
+                                        </td>
+                                      </tr>
+                                    )
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {showForm && (
+          <AddItemForm
+            onClose={() => setShowForm(false)}
+            onSave={handleSaveItem}
+          />
+        )}
+
+        {/* modal component usage */}
+        {selectedItem && (
+          <ItemModal
+            item={selectedItem}
+            onClose={() => setSelectedItem(null)}
+            onSave={(updated) => {
+              const { _id, __v, ...clean } = updated;
+              setItems((prev) =>
+                prev.map((it) => (it.code === clean.code ? clean : it))
+              );
+              setFilteredItems((prev) =>
+                prev.map((it) => (it.code === clean.code ? clean : it))
+              );
+            }}
+          />
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
 }
