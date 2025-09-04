@@ -4,14 +4,15 @@ export default function AddItemForm({ onClose, onSave }) {
   const [formData, setFormData] = useState({
     code: "",
     category: "",
+    customCategoryMode: false, 
     description: "",
     plantName: "",
     weight: "",
     unit: "",
-    customUnitMode: false, // ✅ new state flag for custom unit input
+    customUnitMode: false,
     closingQty: "",
     storeLocation: "",
-    remarks: ""
+    remarks: "",
   });
 
   const handleChange = (e) => {
@@ -25,11 +26,12 @@ export default function AddItemForm({ onClose, onSave }) {
       ...formData,
       weight: formData.weight ? Number(formData.weight) : undefined,
       closingQty: formData.closingQty ? Number(formData.closingQty) : 0,
-      unit: formData.unit?.trim()
+      unit: formData.unit?.trim(),
+      category: formData.category?.trim(),
     });
   };
 
-  // ✅ Available units (dropdown options)
+  // ✅ Units
   const unitOptions = [
     { value: "BAG", label: "Bag" },
     { value: "BDL", label: "Bundles" },
@@ -44,7 +46,22 @@ export default function AddItemForm({ onClose, onSave }) {
     { value: "ROLL", label: "Rolls" },
     { value: "SET", label: "Sets" },
     { value: "SQFT", label: "Square Feet" },
-    { value: "SQM", label: "Square Meters" }
+    { value: "SQM", label: "Square Meters" },
+  ];
+
+  // ✅ Default Categories
+  const categoryOptions = [
+    "Adhesive",
+    "Bought Out",
+    "Chemicals",
+    "Consumables",
+    "Electricals",
+    "Electronics",
+    "Hardware",
+    "Paints",
+    "Plastics",
+    "Raw Material",
+    "Rubbers",
   ];
 
   return (
@@ -53,7 +70,6 @@ export default function AddItemForm({ onClose, onSave }) {
         <h2 className="text-2xl font-bold text-blue-700 mb-6">➕ Add Item</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* existing fields */}
           <input
             type="text"
             name="code"
@@ -62,14 +78,53 @@ export default function AddItemForm({ onClose, onSave }) {
             placeholder="Code"
             className="w-full border rounded-lg px-3 py-2"
           />
-          <input
-            type="text"
-            name="category"
-            value={formData.category}
-            onChange={handleChange}
-            placeholder="Category"
-            className="w-full border rounded-lg px-3 py-2"
-          />
+
+          {/* ✅ Category Dropdown with custom option */}
+          <div>
+            <div className="flex gap-2">
+              <select
+                value={formData.customCategoryMode ? "CUSTOM" : formData.category}
+                onChange={(e) => {
+                  if (e.target.value === "CUSTOM") {
+                    setFormData((prev) => ({
+                      ...prev,
+                      category: "",
+                      customCategoryMode: true,
+                    }));
+                  } else {
+                    setFormData((prev) => ({
+                      ...prev,
+                      category: e.target.value,
+                      customCategoryMode: false,
+                    }));
+                  }
+                }}
+                className="flex-1 border px-3 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
+              >
+                <option value="">-- Select Category --</option>
+                {categoryOptions.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+                <option value="CUSTOM">+ Add New Category</option>
+              </select>
+
+              {/* Show input if user chooses custom category */}
+              {formData.customCategoryMode && (
+                <input
+                  type="text"
+                  placeholder="Enter Category"
+                  value={formData.category}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, category: e.target.value }))
+                  }
+                  className="w-40 border px-3 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
+                />
+              )}
+            </div>
+          </div>
+
           <input
             type="text"
             name="description"
@@ -105,13 +160,13 @@ export default function AddItemForm({ onClose, onSave }) {
                     setFormData((prev) => ({
                       ...prev,
                       unit: "",
-                      customUnitMode: true
+                      customUnitMode: true,
                     }));
                   } else {
                     setFormData((prev) => ({
                       ...prev,
                       unit: e.target.value,
-                      customUnitMode: false
+                      customUnitMode: false,
                     }));
                   }
                 }}

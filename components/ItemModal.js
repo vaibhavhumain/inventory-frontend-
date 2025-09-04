@@ -24,14 +24,14 @@ const handleAddStock = () => {
 
   let newMain = formData.mainStoreQty;
   let newSub = formData.subStoreQty;
-  let newTotal = formData.closingQty; // take existing total, not reset
+  let newTotal = formData.closingQty; 
 
   if (formData.targetStore === "Main Store") {
     newMain += qtyToAdd;
-    newTotal += qtyToAdd; // increment total too
+    newTotal += qtyToAdd; 
   } else if (formData.targetStore === "Sub Store") {
     newSub += qtyToAdd;
-    newTotal += qtyToAdd; // increment total too
+    newTotal += qtyToAdd; 
   }
 
   setFormData((prev) => ({

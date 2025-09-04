@@ -25,6 +25,7 @@ export default function Navbar() {
     { href: "/feed", label: "Feed Stock" },
     { href: "/issue", label: "Issue Stock" },
     { href: "/items", label: "Items" },
+    {href: "/analytics", label: "Analytics" },
   ];
 
   return (
