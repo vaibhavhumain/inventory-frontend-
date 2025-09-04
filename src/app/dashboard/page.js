@@ -68,17 +68,6 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          {/* Low Stock Alert Banner */}
-          {lowStockItems.length > 0 && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg shadow flex items-center gap-2">
-              <AlertTriangle className="text-red-600" size={20} />
-              <span>
-                ⚠️ Low stock alert for:{" "}
-                {lowStockItems.map((it) => it.code).join(", ")}
-              </span>
-            </div>
-          )}
-
           {/* Tiles */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {/* Feed Stock */}

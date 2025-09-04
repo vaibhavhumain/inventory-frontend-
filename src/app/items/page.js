@@ -149,17 +149,6 @@ export default function ItemsPage() {
           </div>
         </div>
 
-        {/* 🔴 Global Low Stock Alert */}
-        {filteredItems.some((it) => it.closingQty < LOW_STOCK_THRESHOLD) && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg shadow">
-            ⚠️ Low stock alert for:{" "}
-            {filteredItems
-              .filter((it) => it.closingQty < LOW_STOCK_THRESHOLD)
-              .map((it) => it.code)
-              .join(", ")}
-          </div>
-        )}
-
         {/* Search */}
         {showSearch && (
           <div className="mb-6">
