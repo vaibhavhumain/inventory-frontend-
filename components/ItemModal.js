@@ -1,8 +1,8 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import API from "../utils/api";
 
-export default function ItemModal({ item, onClose, onSave }) {
+export default function ItemModal({ item, onClose, onSave, historyData }) {
   const [formData, setFormData] = useState({
     ...item,
     mainStoreQty: item.mainStoreQty ?? 0,
@@ -11,25 +11,11 @@ export default function ItemModal({ item, onClose, onSave }) {
       item.closingQty ?? (item.mainStoreQty ?? 0) + (item.subStoreQty ?? 0),
     addQty: "",
     targetStore: "",
-    supplierName: item.supplierName || "", // ✅ supplier field
+    supplierName: item.supplierName || "",
+    supplierAmount: "", // ✅ new
   });
 
-  const [supplierHistory, setSupplierHistory] = useState([]);
-
   const remarksOptions = ["Dead Stock", "Fast Moving", "Slow Moving"];
-
-  // Fetch supplier history when modal opens
-  useEffect(() => {
-    async function fetchSupplierHistory() {
-      try {
-        const res = await API.get(`/items/${item.code}/history`);
-        setSupplierHistory(res.data.supplierHistory || []);
-      } catch (err) {
-        console.error("Error fetching supplier history:", err);
-      }
-    }
-    fetchSupplierHistory();
-  }, [item.code]);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -73,7 +59,8 @@ export default function ItemModal({ item, onClose, onSave }) {
         subStoreQty: Number(formData.subStoreQty) || 0,
         closingQty: Number(formData.closingQty) || 0,
         remarks: formData.remarks,
-        supplierName: formData.supplierName || "", // ✅ send supplier name
+        supplierName: formData.supplierName || "",
+        supplierAmount: Number(formData.supplierAmount) || 0, // ✅ send to backend
       };
 
       delete payload._id;
@@ -88,6 +75,9 @@ export default function ItemModal({ item, onClose, onSave }) {
       alert(err.response?.data?.error || "Update failed");
     }
   };
+
+  const stockHistory = historyData?.stock || [];
+  const supplierHistory = historyData?.supplierHistory || [];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
@@ -109,38 +99,13 @@ export default function ItemModal({ item, onClose, onSave }) {
         <div className="grid grid-cols-2 gap-6">
           {/* Left side – static info */}
           <div className="space-y-3 bg-blue-50 p-4 rounded-xl shadow-inner">
-            <p>
-              <span className="font-semibold">Category:</span>{" "}
-              {formData.category || "-"}
-            </p>
-            <p>
-              <span className="font-semibold">Plant:</span>{" "}
-              {formData.plantName || "-"}
-            </p>
-            <p>
-              <span className="font-semibold">Weight:</span>{" "}
-              {formData.weight || "-"} {formData.unit}
-            </p>
-            <p>
-              <span className="font-semibold">Total Qty:</span>{" "}
-              {formData.closingQty || 0}
-            </p>
-            <p>
-              <span className="font-semibold">Main Store Qty:</span>{" "}
-              {formData.mainStoreQty || 0}
-            </p>
-            <p>
-              <span className="font-semibold">Sub Store Qty:</span>{" "}
-              {formData.subStoreQty || 0}
-            </p>
-            <p>
-              <span className="font-semibold">Remarks:</span>{" "}
-              {formData.remarks || "-"}
-            </p>
-            <p>
-              <span className="font-semibold">Supplier:</span>{" "}
-              {formData.supplierName || "-"}
-            </p>
+            <p><span className="font-semibold">Category:</span> {formData.category || "-"}</p>
+            <p><span className="font-semibold">Plant:</span> {formData.plantName || "-"}</p>
+            <p><span className="font-semibold">Weight:</span> {formData.weight || "-"} {formData.unit}</p>
+            <p><span className="font-semibold">Total Qty:</span> {formData.closingQty || 0}</p>
+            <p><span className="font-semibold">Main Store Qty:</span> {formData.mainStoreQty || 0}</p>
+            <p><span className="font-semibold">Sub Store Qty:</span> {formData.subStoreQty || 0}</p>
+            <p><span className="font-semibold">Remarks:</span> {formData.remarks || "-"}</p>
           </div>
 
           {/* Right side – editable form */}
@@ -155,9 +120,7 @@ export default function ItemModal({ item, onClose, onSave }) {
             />
 
             {/* Add stock */}
-            <label className="block text-sm font-medium">
-              Add Quantity to Store
-            </label>
+            <label className="block text-sm font-medium">Add Quantity to Store</label>
             <div className="flex gap-2">
               <select
                 value={formData.targetStore || ""}
@@ -194,6 +157,15 @@ export default function ItemModal({ item, onClose, onSave }) {
               className="w-full border px-3 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
             />
 
+            <label className="block text-sm font-medium">Supplier Amount</label>
+            <input
+              type="number"
+              placeholder="Enter Amount"
+              value={formData.supplierAmount || ""}
+              onChange={(e) => handleChange("supplierAmount", e.target.value)}
+              className="w-full border px-3 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
+            />
+
             {/* Remarks */}
             <label className="block text-sm font-medium">Remarks</label>
             <select
@@ -203,19 +175,50 @@ export default function ItemModal({ item, onClose, onSave }) {
             >
               <option value="">-- Select Remark --</option>
               {remarksOptions.map((rem) => (
-                <option key={rem} value={rem}>
-                  {rem}
-                </option>
+                <option key={rem} value={rem}>{rem}</option>
               ))}
             </select>
           </div>
         </div>
 
+        {/* Stock History */}
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">📊 Stock History</h3>
+          <div className="rounded-lg border border-gray-200 overflow-hidden bg-white">
+            <table className="w-full text-xs">
+              <thead className="bg-gray-100 text-gray-600">
+                <tr>
+                  <th className="px-2 py-2 text-left">Date</th>
+                  <th className="px-2 py-2 text-left">In</th>
+                  <th className="px-2 py-2 text-left">Out</th>
+                  <th className="px-2 py-2 text-left">Closing Qty</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stockHistory.length > 0 ? (
+                  stockHistory.map((h, i) => (
+                    <tr key={i}>
+                      <td className="px-2 py-2 text-gray-700">{new Date(h.date).toLocaleDateString()}</td>
+                      <td className="px-2 py-2 text-green-600 font-medium">{h.in}</td>
+                      <td className="px-2 py-2 text-red-600 font-medium">{h.out}</td>
+                      <td className="px-2 py-2 text-gray-800 font-semibold">{h.closingQty}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4" className="px-2 py-3 text-center text-gray-400">
+                      No stock history yet
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         {/* Supplier History */}
         <div className="mt-8">
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">
-            🏭 Supplier History
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">🏭 Supplier History</h3>
           <div className="rounded-lg border border-gray-200 overflow-hidden bg-white">
             <table className="w-full text-xs">
               <thead className="bg-gray-100 text-gray-600">
@@ -228,16 +231,10 @@ export default function ItemModal({ item, onClose, onSave }) {
               <tbody>
                 {supplierHistory.length > 0 ? (
                   supplierHistory.map((s, i) => (
-                    <tr key={i} className="hover:bg-gray-50 transition">
-                      <td className="px-2 py-2 text-gray-700">
-                        {new Date(s.date).toLocaleDateString()}
-                      </td>
-                      <td className="px-2 py-2 text-gray-700">
-                        {s.supplierName}
-                      </td>
-                      <td className="px-2 py-2 text-gray-800 font-semibold">
-                        {s.amount}
-                      </td>
+                    <tr key={i}>
+                      <td className="px-2 py-2 text-gray-700">{new Date(s.date).toLocaleDateString()}</td>
+                      <td className="px-2 py-2 text-gray-700">{s.supplierName}</td>
+                      <td className="px-2 py-2 text-gray-800 font-semibold">{s.amount}</td>
                     </tr>
                   ))
                 ) : (

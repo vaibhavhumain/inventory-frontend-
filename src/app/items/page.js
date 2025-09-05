@@ -21,52 +21,53 @@ export default function ItemsPage() {
   const LOW_STOCK_THRESHOLD = 10;
 
   // Fetch items
-  useEffect(() => {
-    async function fetchItems() {
-      try {
-        const res = await API.get("/items");
-        const sorted = [...res.data].sort((a, b) =>
-          (a.category || "").localeCompare(b.category || "")
-        );
-        setItems(sorted);
-        setFilteredItems(sorted);
-      } catch (error) {
-        console.error("Error fetching items:", error);
-      } finally {
-        setLoading(false);
-      }
+  const fetchItems = async () => {
+    try {
+      const res = await API.get("/items");
+      const sorted = [...res.data].sort((a, b) =>
+        (a.category || "").localeCompare(b.category || "")
+      );
+      setItems(sorted);
+      setFilteredItems(sorted);
+    } catch (error) {
+      console.error("Error fetching items:", error);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchItems();
   }, []);
 
   // Add new item
-const handleSaveItem = async (newItem) => {
-  try {
-    const res = await API.post("/items", newItem);
-    const saved = res.data;
+  const handleSaveItem = async (newItem) => {
+    try {
+      const res = await API.post("/items", newItem);
+      const saved = res.data;
 
-    setItems((prev) => {
-      const exists = prev.some((it) => it.code === saved.code);
-      if (exists) {
-        return prev.map((it) => (it.code === saved.code ? saved : it));
-      }
-      return [...prev, saved];
-    });
+      setItems((prev) => {
+        const exists = prev.some((it) => it.code === saved.code);
+        if (exists) {
+          return prev.map((it) => (it.code === saved.code ? saved : it));
+        }
+        return [...prev, saved];
+      });
 
-    setFilteredItems((prev) => {
-      const exists = prev.some((it) => it.code === saved.code);
-      if (exists) {
-        return prev.map((it) => (it.code === saved.code ? saved : it));
-      }
-      return [...prev, saved];
-    });
+      setFilteredItems((prev) => {
+        const exists = prev.some((it) => it.code === saved.code);
+        if (exists) {
+          return prev.map((it) => (it.code === saved.code ? saved : it));
+        }
+        return [...prev, saved];
+      });
 
-    setShowForm(false);
-  } catch (err) {
-    console.error("Error creating item:", err.response?.data || err.message);
-    alert(err.response?.data?.error || "Failed to create item");
-  }
-};
+      setShowForm(false);
+    } catch (err) {
+      console.error("Error creating item:", err.response?.data || err.message);
+      alert(err.response?.data?.error || "Failed to create item");
+    }
+  };
 
   // Search filter
   const handleSearch = (query) => {
@@ -87,12 +88,8 @@ const handleSaveItem = async (newItem) => {
     );
   };
 
-  // Toggle history row
-  const toggleHistory = async (code) => {
-    if (expandedRow === code) {
-      setExpandedRow(null);
-      return;
-    }
+  // Fetch history (stock + suppliers)
+  const fetchHistory = async (code) => {
     try {
       const res = await API.get(`/items/${code}/history`);
       setHistoryData((prev) => ({
@@ -100,13 +97,22 @@ const handleSaveItem = async (newItem) => {
         [code]: {
           stock: res.data.history || [],
           suppliers: res.data.suppliers || [],
-          supplierHistory: res.data.supplierHistory || []
-        }
+          supplierHistory: res.data.supplierHistory || [],
+        },
       }));
-      setExpandedRow(code);
     } catch (err) {
       console.error("Error fetching history:", err);
     }
+  };
+
+  // Toggle history row
+  const toggleHistory = async (code) => {
+    if (expandedRow === code) {
+      setExpandedRow(null);
+      return;
+    }
+    await fetchHistory(code);
+    setExpandedRow(code);
   };
 
   return (
@@ -179,6 +185,7 @@ const handleSaveItem = async (newItem) => {
                         onClick={() => {
                           const { _id, __v, ...rest } = item;
                           setSelectedItem(rest);
+                          fetchHistory(item.code); // ✅ load history for modal too
                         }}
                         className="hover:bg-blue-50 transition duration-200 cursor-pointer"
                       >
@@ -259,7 +266,7 @@ const handleSaveItem = async (newItem) => {
                                   </thead>
                                   <tbody>
                                     {(historyData[item.code]?.stock || []).map((h, i) => (
-                                      <tr key={i} className="hover:bg-gray-50 transition">
+                                      <tr key={i}>
                                         <td className="px-2 py-2 text-gray-700">
                                           {new Date(h.date).toLocaleDateString()}
                                         </td>
@@ -295,13 +302,11 @@ const handleSaveItem = async (newItem) => {
                                   </thead>
                                   <tbody>
                                     {(historyData[item.code]?.supplierHistory || []).map((s, i) => (
-                                      <tr key={i} className="hover:bg-gray-50 transition">
+                                      <tr key={i}>
                                         <td className="px-2 py-2 text-gray-700">
                                           {new Date(s.date).toLocaleDateString()}
                                         </td>
-                                        <td className="px-2 py-2 text-gray-700">
-                                          {s.supplierName}
-                                        </td>
+                                        <td className="px-2 py-2 text-gray-700">{s.supplierName}</td>
                                         <td className="px-2 py-2 text-gray-800 font-semibold">
                                           {s.amount}
                                         </td>
@@ -336,15 +341,20 @@ const handleSaveItem = async (newItem) => {
       {selectedItem && (
         <ItemModal
           item={selectedItem}
+          historyData={historyData[selectedItem.code] || { stock: [], supplierHistory: [] }}
           onClose={() => setSelectedItem(null)}
-          onSave={(updated) => {
+          onSave={async (updated) => {
             const { _id, __v, ...clean } = updated;
+
+            // update items
             setItems((prev) =>
               prev.map((it) => (it.code === clean.code ? clean : it))
             );
             setFilteredItems((prev) =>
               prev.map((it) => (it.code === clean.code ? clean : it))
             );
+
+            await fetchHistory(clean.code);
           }}
         />
       )}
