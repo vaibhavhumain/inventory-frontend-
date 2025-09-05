@@ -140,17 +140,7 @@ export default function DashboardPage() {
                 Record issued items with details.
               </p>
             </button>
-
-            <div className="group bg-white rounded-2xl shadow-md hover:shadow-xl border border-gray-200 p-8 transition-all duration-300">
-              <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition">
-                <FileSpreadsheet size={28} />
-              </div>
-              <h3 className="mt-5 text-lg font-semibold text-gray-800">Export Report</h3>
-              <p className="text-sm text-gray-500 mt-1 mb-4">
-                Download Excel by date or custom range.
-              </p>
               <ExportForm />
-            </div>
           </div>
   
             {/* Table */}
