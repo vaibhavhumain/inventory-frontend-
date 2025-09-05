@@ -25,9 +25,11 @@ export default function AnalyticsPage() {
   const [consumption, setConsumption] = useState([]);
   const [reorder, setReorder] = useState([]);
   const [turnover, setTurnover] = useState([]);
+  const [loading, setLoading] = useState(false); // ✅ NEW
 
   const fetchData = async (y, m) => {
     try {
+      setLoading(true); // ✅ start loading
       const { startDate, endDate } = getMonthRange(y, m);
 
       const [valRes, conRes, reoRes, turRes] = await Promise.all([
@@ -43,6 +45,8 @@ export default function AnalyticsPage() {
       setTurnover(turRes.data);
     } catch (err) {
       console.error("Error loading analytics:", err);
+    } finally {
+      setLoading(false); // ✅ stop loading
     }
   };
 
@@ -139,14 +143,14 @@ export default function AnalyticsPage() {
                 type="bar"
                 data={
                   consumption.consumption?.map((c) => ({
-                    name: c.description || c.code || c._id, // ✅ show description > code > fallback ID
+                    name: c.description || c.code || c._id,
                     value: c.totalIssued,
                   })) || []
                 }
               />
             </div>
 
-            {/* Turnover Ratios (Bar per Item) */}
+            {/* Turnover Ratios */}
             <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition">
               <AnalysisCharts
                 title="Turnover Ratio (by Item)"
@@ -158,7 +162,7 @@ export default function AnalyticsPage() {
               />
             </div>
 
-            {/* Fast vs Slow-moving Summary */}
+            {/* Fast vs Slow-moving */}
             <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition lg:col-span-2">
               <AnalysisCharts
                 title="Fast vs Slow Moving Items"

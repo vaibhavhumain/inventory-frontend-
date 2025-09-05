@@ -4,7 +4,7 @@ export default function AddItemForm({ onClose, onSave }) {
   const [formData, setFormData] = useState({
     code: "",
     category: "",
-    customCategoryMode: false, 
+    customCategoryMode: false,
     description: "",
     plantName: "",
     weight: "",
@@ -13,6 +13,7 @@ export default function AddItemForm({ onClose, onSave }) {
     closingQty: "",
     storeLocation: "",
     remarks: "",
+    suppliers: [{ name: "", amount: "" }], // 🆕 suppliers array
   });
 
   const handleChange = (e) => {
@@ -20,16 +21,39 @@ export default function AddItemForm({ onClose, onSave }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSave({
-      ...formData,
-      weight: formData.weight ? Number(formData.weight) : undefined,
-      closingQty: formData.closingQty ? Number(formData.closingQty) : 0,
-      unit: formData.unit?.trim(),
-      category: formData.category?.trim(),
-    });
+  // Supplier change
+  const handleSupplierChange = (index, field, value) => {
+    const updated = [...formData.suppliers];
+    updated[index][field] = value;
+    setFormData((prev) => ({ ...prev, suppliers: updated }));
   };
+
+  // Add/remove supplier
+  const addSupplier = () =>
+    setFormData((prev) => ({
+      ...prev,
+      suppliers: [...prev.suppliers, { name: "", amount: "" }],
+    }));
+  const removeSupplier = (index) =>
+    setFormData((prev) => ({
+      ...prev,
+      suppliers: prev.suppliers.filter((_, i) => i !== index),
+    }));
+
+const handleSubmit = (e) => {
+  e.preventDefault();
+
+  const enteredQty = formData.closingQty ? Number(formData.closingQty) : 0;
+
+  onSave({
+    ...formData,
+    weight: formData.weight ? Number(formData.weight) : undefined,
+    closingQty: enteredQty, // just send the entered qty
+    unit: formData.unit?.trim(),
+    category: formData.category?.trim(),
+    suppliers: formData.suppliers.filter((s) => s.name || s.amount),
+  });
+};
 
   // ✅ Units
   const unitOptions = [
@@ -66,10 +90,11 @@ export default function AddItemForm({ onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
-      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
+      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-2xl overflow-y-auto max-h-[90vh]">
         <h2 className="text-2xl font-bold text-blue-700 mb-6">➕ Add Item</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Code */}
           <input
             type="text"
             name="code"
@@ -79,8 +104,11 @@ export default function AddItemForm({ onClose, onSave }) {
             className="w-full border rounded-lg px-3 py-2"
           />
 
-          {/* ✅ Category Dropdown with custom option */}
+          {/* ✅ Category Dropdown */}
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category
+            </label>
             <div className="flex gap-2">
               <select
                 value={formData.customCategoryMode ? "CUSTOM" : formData.category}
@@ -110,7 +138,6 @@ export default function AddItemForm({ onClose, onSave }) {
                 <option value="CUSTOM">+ Add New Category</option>
               </select>
 
-              {/* Show input if user chooses custom category */}
               {formData.customCategoryMode && (
                 <input
                   type="text"
@@ -125,6 +152,7 @@ export default function AddItemForm({ onClose, onSave }) {
             </div>
           </div>
 
+          {/* Description */}
           <input
             type="text"
             name="description"
@@ -133,6 +161,8 @@ export default function AddItemForm({ onClose, onSave }) {
             placeholder="Description"
             className="w-full border rounded-lg px-3 py-2"
           />
+
+          {/* Plant */}
           <input
             type="text"
             name="plantName"
@@ -141,6 +171,8 @@ export default function AddItemForm({ onClose, onSave }) {
             placeholder="Plant Name"
             className="w-full border rounded-lg px-3 py-2"
           />
+
+          {/* Weight */}
           <input
             type="number"
             name="weight"
@@ -150,8 +182,11 @@ export default function AddItemForm({ onClose, onSave }) {
             className="w-full border rounded-lg px-3 py-2"
           />
 
-          {/* ✅ Unit Dropdown with custom option */}
+          {/* ✅ Unit Dropdown */}
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Unit
+            </label>
             <div className="flex gap-2">
               <select
                 value={formData.customUnitMode ? "CUSTOM" : formData.unit}
@@ -181,7 +216,6 @@ export default function AddItemForm({ onClose, onSave }) {
                 <option value="CUSTOM">+ Add New Unit</option>
               </select>
 
-              {/* Show input if user chooses custom unit */}
               {formData.customUnitMode && (
                 <input
                   type="text"
@@ -196,6 +230,7 @@ export default function AddItemForm({ onClose, onSave }) {
             </div>
           </div>
 
+          {/* Closing Quantity */}
           <input
             type="number"
             name="closingQty"
@@ -205,7 +240,7 @@ export default function AddItemForm({ onClose, onSave }) {
             className="w-full border rounded-lg px-3 py-2"
           />
 
-          {/* Store Location dropdown */}
+          {/* Store Location */}
           <select
             name="storeLocation"
             value={formData.storeLocation}
@@ -217,7 +252,7 @@ export default function AddItemForm({ onClose, onSave }) {
             <option value="sub store">Sub Store</option>
           </select>
 
-          {/* Remarks dropdown */}
+          {/* Remarks */}
           <select
             name="remarks"
             value={formData.remarks}
@@ -230,7 +265,52 @@ export default function AddItemForm({ onClose, onSave }) {
             <option value="dead stock">Dead Stock</option>
           </select>
 
-          {/* buttons */}
+          {/* 🆕 Supplier Section */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Suppliers
+            </label>
+            {formData.suppliers.map((supplier, index) => (
+              <div key={index} className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  placeholder="Supplier Name"
+                  value={supplier.name}
+                  onChange={(e) =>
+                    handleSupplierChange(index, "name", e.target.value)
+                  }
+                  className="flex-1 border px-3 py-2 rounded-lg"
+                />
+                <input
+                  type="number"
+                  placeholder="Amount"
+                  value={supplier.amount}
+                  onChange={(e) =>
+                    handleSupplierChange(index, "amount", e.target.value)
+                  }
+                  className="w-32 border px-3 py-2 rounded-lg"
+                />
+                {index > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => removeSupplier(index)}
+                    className="px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  >
+                    ✖
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addSupplier}
+              className="text-blue-600 text-sm hover:underline mt-1"
+            >
+              + Add Supplier
+            </button>
+          </div>
+
+          {/* Buttons */}
           <div className="flex justify-end gap-3 mt-6">
             <button
               type="button"

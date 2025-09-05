@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import API from "../utils/api";
 
 export default function ItemModal({ item, onClose, onSave }) {
@@ -7,43 +7,59 @@ export default function ItemModal({ item, onClose, onSave }) {
     ...item,
     mainStoreQty: item.mainStoreQty ?? 0,
     subStoreQty: item.subStoreQty ?? 0,
-    closingQty: item.closingQty ?? (item.mainStoreQty ?? 0) + (item.subStoreQty ?? 0),
+    closingQty:
+      item.closingQty ?? (item.mainStoreQty ?? 0) + (item.subStoreQty ?? 0),
     addQty: "",
     targetStore: "",
+    supplierName: item.supplierName || "", // ✅ supplier field
   });
 
+  const [supplierHistory, setSupplierHistory] = useState([]);
+
   const remarksOptions = ["Dead Stock", "Fast Moving", "Slow Moving"];
+
+  // Fetch supplier history when modal opens
+  useEffect(() => {
+    async function fetchSupplierHistory() {
+      try {
+        const res = await API.get(`/items/${item.code}/history`);
+        setSupplierHistory(res.data.supplierHistory || []);
+      } catch (err) {
+        console.error("Error fetching supplier history:", err);
+      }
+    }
+    fetchSupplierHistory();
+  }, [item.code]);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-const handleAddStock = () => {
-  const qtyToAdd = Number(formData.addQty) || 0;
-  if (!formData.targetStore || qtyToAdd <= 0) return;
+  const handleAddStock = () => {
+    const qtyToAdd = Number(formData.addQty) || 0;
+    if (!formData.targetStore || qtyToAdd <= 0) return;
 
-  let newMain = formData.mainStoreQty;
-  let newSub = formData.subStoreQty;
-  let newTotal = formData.closingQty; 
+    let newMain = formData.mainStoreQty;
+    let newSub = formData.subStoreQty;
+    let newTotal = formData.closingQty;
 
-  if (formData.targetStore === "Main Store") {
-    newMain += qtyToAdd;
-    newTotal += qtyToAdd; 
-  } else if (formData.targetStore === "Sub Store") {
-    newSub += qtyToAdd;
-    newTotal += qtyToAdd; 
-  }
+    if (formData.targetStore === "Main Store") {
+      newMain += qtyToAdd;
+      newTotal += qtyToAdd;
+    } else if (formData.targetStore === "Sub Store") {
+      newSub += qtyToAdd;
+      newTotal += qtyToAdd;
+    }
 
-  setFormData((prev) => ({
-    ...prev,
-    mainStoreQty: newMain,
-    subStoreQty: newSub,
-    closingQty: newTotal, 
-    addQty: "",
-    targetStore: "",
-  }));
-};
-
+    setFormData((prev) => ({
+      ...prev,
+      mainStoreQty: newMain,
+      subStoreQty: newSub,
+      closingQty: newTotal,
+      addQty: "",
+      targetStore: "",
+    }));
+  };
 
   const handleSave = async () => {
     try {
@@ -55,10 +71,9 @@ const handleAddStock = () => {
         unit: formData.unit,
         mainStoreQty: Number(formData.mainStoreQty) || 0,
         subStoreQty: Number(formData.subStoreQty) || 0,
-        closingQty:
-          (Number(formData.mainStoreQty) || 0) +
-          (Number(formData.subStoreQty) || 0),
+        closingQty: Number(formData.closingQty) || 0,
         remarks: formData.remarks,
+        supplierName: formData.supplierName || "", // ✅ send supplier name
       };
 
       delete payload._id;
@@ -76,7 +91,7 @@ const handleAddStock = () => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-[750px] max-h-[85vh] overflow-y-auto p-8">
+      <div className="bg-white rounded-2xl shadow-2xl w-[800px] max-h-[90vh] overflow-y-auto p-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 border-b pb-3">
           <h2 className="text-2xl font-bold text-blue-700">
@@ -122,10 +137,15 @@ const handleAddStock = () => {
               <span className="font-semibold">Remarks:</span>{" "}
               {formData.remarks || "-"}
             </p>
+            <p>
+              <span className="font-semibold">Supplier:</span>{" "}
+              {formData.supplierName || "-"}
+            </p>
           </div>
 
           {/* Right side – editable form */}
           <div className="space-y-4">
+            {/* Description */}
             <label className="block text-sm font-medium">Description</label>
             <textarea
               rows="3"
@@ -134,7 +154,7 @@ const handleAddStock = () => {
               className="w-full border px-3 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
             />
 
-            {/* Add stock to a specific store */}
+            {/* Add stock */}
             <label className="block text-sm font-medium">
               Add Quantity to Store
             </label>
@@ -164,6 +184,16 @@ const handleAddStock = () => {
               </button>
             </div>
 
+            {/* Supplier */}
+            <label className="block text-sm font-medium">Supplier Name</label>
+            <input
+              type="text"
+              placeholder="Enter Supplier Name"
+              value={formData.supplierName || ""}
+              onChange={(e) => handleChange("supplierName", e.target.value)}
+              className="w-full border px-3 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
+            />
+
             {/* Remarks */}
             <label className="block text-sm font-medium">Remarks</label>
             <select
@@ -181,7 +211,48 @@ const handleAddStock = () => {
           </div>
         </div>
 
-        {/* Footer buttons */}
+        {/* Supplier History */}
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">
+            🏭 Supplier History
+          </h3>
+          <div className="rounded-lg border border-gray-200 overflow-hidden bg-white">
+            <table className="w-full text-xs">
+              <thead className="bg-gray-100 text-gray-600">
+                <tr>
+                  <th className="px-2 py-2 text-left">Date</th>
+                  <th className="px-2 py-2 text-left">Supplier</th>
+                  <th className="px-2 py-2 text-left">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {supplierHistory.length > 0 ? (
+                  supplierHistory.map((s, i) => (
+                    <tr key={i} className="hover:bg-gray-50 transition">
+                      <td className="px-2 py-2 text-gray-700">
+                        {new Date(s.date).toLocaleDateString()}
+                      </td>
+                      <td className="px-2 py-2 text-gray-700">
+                        {s.supplierName}
+                      </td>
+                      <td className="px-2 py-2 text-gray-800 font-semibold">
+                        {s.amount}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="3" className="px-2 py-3 text-center text-gray-400">
+                      No supplier history yet
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Footer */}
         <div className="flex justify-end gap-3 mt-8">
           <button
             onClick={onClose}

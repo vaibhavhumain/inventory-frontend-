@@ -6,6 +6,7 @@ import { clearAuth, getUser } from "../../../utils/auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Navbar from "../../../components/Navbar";
+import CategoryItemsTable from "../../../components/CategoryItemsTable";
 import {
   PlusCircle,
   MinusCircle,
@@ -37,20 +38,19 @@ export default function DashboardPage() {
     router.push("/login");
   };
 
- useEffect(() => {
-  setUser(getUser());
-  fetchItems();
-}, []);
+  const fetchItems = async () => {
+    try {
+      const res = await API.get("/items");
+      setItems(res.data);
+      setTotalItems(res.data.length);
 
-const fetchItems = async () => {
-  try {
-    const res = await API.get("/items");
-    setItems(res.data);
-    setTotalItems(res.data.length);
-  } catch (err) {
-    console.error("Error fetching items:", err);
-  }
-};
+      // calculate low stock items
+      const lowItems = res.data.filter((it) => it.closingQty < LOW_STOCK_THRESHOLD);
+      setLowStockItems(lowItems);
+    } catch (err) {
+      console.error("Error fetching items:", err);
+    }
+  };
 
   const handleNavigation = (href) => {
     setLoading(true);
@@ -61,6 +61,7 @@ const fetchItems = async () => {
     <RequireAuth>
       <Navbar />
 
+      {/* Loading Overlay */}
       {loading && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/40 z-50">
           <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -71,7 +72,9 @@ const fetchItems = async () => {
         <div className="max-w-7xl mx-auto space-y-10">
           {/* Header */}
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-800">📦 Inventory Dashboard</h1>
+            <h1 className="text-3xl font-bold text-gray-800">
+              📦 Inventory Dashboard
+            </h1>
             <p className="text-gray-500 mt-2">
               Monitor inventory, manage stock, and export reports efficiently.
             </p>
@@ -149,54 +152,13 @@ const fetchItems = async () => {
               <ExportForm />
             </div>
           </div>
-          {/* Items Table With Category Filter */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <Package className="text-blue-600" size={20}/> Inventory Items
-            </h2>
-            {/* Category Filter */}
-            <div className="mb-4">
-              <select onChange={(e) => setSelectedCategory(e.target.value)} value={selectedCategory} className="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-                <option value="">All Categories</option>
-                {[...new Set(items.map(item => item.category))].map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
-            {/* Items Table */}
-            <div className="overflow-x-auto">
-              <table className="min-w-full table-auto">
-                <thead>
-                  <tr className="text-left text-gray-600 border-b">
-                    <th className="px-4 py-2">Code</th>
-                    <th className="px-4 py-2">Category</th>
-                    <th className="px-4 py-2">Description</th>
-                    <th className="px-4 py-2">Main Store Qty</th>
-                    <th className="px-4 py-2">Sub Store Qty</th>
-                    <th className="px-4 py-2 text-center">Total Qty</th>
-                    <th className="px-4 py-2 text-center">Unit</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items
-                    .filter(item => !selectedCategory || item.category === selectedCategory)
-                    .map((item) => (
-                      <tr key={item._id} className="border-b hover:bg-gray-50 transition">
-                        <td className="px-4 py-3">{item.code}</td>
-                        <td className="px-4 py-3">{item.category}</td>
-                        <td className="px-4 py-3">{item.description || "-"}</td> 
-                        <td className="px-4 py-3">{item.mainStoreQty || 0}</td>
-                        <td className="px-4 py-3">{item.subStoreQty || 0}</td>
-                        <td className="px-4 py-3 text-center">{item.closingQty || 0}</td>
-                        <td className="px-4 py-3 text-center">{item.unit || "-"}</td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
+  
+            {/* Table */}
+            <div className="px-6 py-4">
+              <CategoryItemsTable items={items} selectedCategory={selectedCategory} />
             </div>
           </div>
         </div>
-      </div>
     </RequireAuth>
   );
 }
