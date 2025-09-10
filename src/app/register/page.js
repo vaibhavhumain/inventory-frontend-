@@ -35,15 +35,15 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 animate-gradient">
+    <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-blue-100 via-cyan-100 to-teal-100 animate-gradient">
       <div className="relative w-full max-w-md">
         {/* Glow Layer */}
-        <div className="absolute inset-0 blur-2xl bg-gradient-to-tr from-purple-400/40 to-pink-400/40 rounded-3xl"></div>
+        <div className="absolute inset-0 blur-2xl bg-gradient-to-tr from-blue-400/40 to-teal-400/40 rounded-3xl"></div>
 
         <div className="relative backdrop-blur-xl bg-white/80 border border-white/30 shadow-2xl rounded-3xl p-8">
           {/* Header */}
           <div className="text-center">
-            <div className="mx-auto h-14 w-14 flex items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-500 to-pink-500 text-white shadow-lg">
+            <div className="mx-auto h-14 w-14 flex items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-500 to-teal-500 text-white shadow-lg">
               🧾
             </div>
             <h1 className="mt-4 text-3xl font-bold text-gray-900">
@@ -69,7 +69,7 @@ export default function Register() {
                   onChange={onChange}
                   required
                   placeholder="John Doe"
-                  className="w-full pl-10 rounded-xl border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full pl-10 rounded-xl border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
@@ -89,7 +89,7 @@ export default function Register() {
                   onChange={onChange}
                   required
                   placeholder="johndoe"
-                  className="w-full pl-10 rounded-xl border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full pl-10 rounded-xl border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
@@ -111,7 +111,7 @@ export default function Register() {
                   required
                   placeholder="john@example.com"
                   autoComplete="email"
-                  className="w-full pl-10 rounded-xl border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full pl-10 rounded-xl border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
@@ -133,12 +133,12 @@ export default function Register() {
                   required
                   placeholder="••••••••"
                   autoComplete="new-password"
-                  className="w-full pl-10 pr-20 rounded-xl border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full pl-10 pr-20 rounded-xl border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPwd((s) => !s)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-purple-600 px-2 py-1 rounded-md hover:bg-purple-50"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-blue-600 px-2 py-1 rounded-md hover:bg-blue-50"
                   aria-label={showPwd ? "Hide password" : "Show password"}
                 >
                   {showPwd ? "Hide" : "Show"}
@@ -158,7 +158,7 @@ export default function Register() {
                 name="role"
                 value={form.role}
                 onChange={onChange}
-                className="w-full rounded-xl border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                className="w-full rounded-xl border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="user">User</option>
                 <option value="admin">Admin</option>
@@ -179,7 +179,7 @@ export default function Register() {
               className={`w-full py-3 rounded-xl font-semibold text-white transition transform ${
                 loading
                   ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-gradient-to-r from-purple-600 to-pink-600 hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                  : "bg-gradient-to-r from-blue-600 to-teal-600 hover:scale-[1.02] shadow-lg hover:shadow-xl"
               }`}
             >
               {loading ? "Creating..." : "Create account"}
@@ -191,7 +191,7 @@ export default function Register() {
             Already have an account?{" "}
             <Link
               href="/login"
-              className="text-purple-600 font-medium hover:underline"
+              className="text-blue-600 font-medium hover:underline"
             >
               Log in
             </Link>

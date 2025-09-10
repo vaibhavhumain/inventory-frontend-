@@ -12,22 +12,26 @@ API.interceptors.request.use((config) => {
   return config;
 });
   
-
 export async function downloadExcelByDate(date) {
-  const res = await API.get(`/export/${date}`, { responseType: "blob" });
+  try {
+    const res = await API.get(`/export/${date}`, { responseType: "blob" });
 
-  const blob = new Blob([res.data], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  });
+    const blob = new Blob([res.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
 
-  const filename = `inventory-${date}.xlsx`;
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(link.href);
+    const filename = `inventory-${date}.xlsx`;
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(link.href);
+  } catch (err) {
+    console.error("Excel download failed:", err);
+    alert("Failed to download Excel file. Please try again.");
+  }
 }
 
 export default API;
