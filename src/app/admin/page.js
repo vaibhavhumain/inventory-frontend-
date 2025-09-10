@@ -4,6 +4,22 @@ import { useRouter } from "next/navigation";
 import API from "../../../utils/api";
 import { getToken, clearAuth } from "../../../utils/auth";
 import AdminNavbar from "../../../components/AdminNavbar";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  LineChart,
+  Line,
+  Legend,
+} from "recharts";
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [authLoading, setAuthLoading] = useState(true);
@@ -68,35 +84,119 @@ export default function AdminDashboard() {
     );
   }
 
+  // Dummy data for charts (replace with backend stats if available)
+  const revenueData = [
+    { year: "2019", value: 200 },
+    { year: "2020", value: 400 },
+    { year: "2021", value: 350 },
+    { year: "2022", value: 600 },
+    { year: "2023", value: 800 },
+  ];
+
+  const emailData = [
+    { name: "Marketplace", value: 3654 },
+    { name: "Last Week", value: 954 },
+    { name: "Last Month", value: 8462 },
+  ];
+
   return (
     <div>
-    <AdminNavbar/>
-    <div className="min-h-screen p-8 bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50">
-      <h1 className="text-3xl font-bold mb-6 text-gray-900">👨‍💼 Admin Dashboard</h1>
+      <AdminNavbar />
+      <div className="min-h-screen p-6 bg-gray-50">
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-          <h2 className="text-lg font-semibold text-gray-700">Total Users</h2>
-          <p className="text-3xl font-bold mt-2 text-blue-600">
-            {stats?.totalUsers ?? 0}
-          </p>
+        {/* Top Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
+            <h2 className="text-gray-600 text-sm">Total Users</h2>
+            <p className="text-3xl font-bold text-blue-600">
+              {stats?.totalUsers ?? 0}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">↑ Growth from last month</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
+            <h2 className="text-gray-600 text-sm">Stock Items</h2>
+            <p className="text-3xl font-bold text-teal-600">
+              {stats?.stockItems ?? 0}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">↑ Updated regularly</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
+            <h2 className="text-gray-600 text-sm">Low Stock</h2>
+            <p className="text-3xl font-bold text-red-600">
+              {stats?.lowStock ?? 0}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">↓ Needs restocking</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
+            <h2 className="text-gray-600 text-sm">Reports Generated</h2>
+            <p className="text-3xl font-bold text-purple-600">
+              {stats?.reports ?? 0}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">↑ Last 30 days</p>
+          </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-          <h2 className="text-lg font-semibold text-gray-700">Stock Items</h2>
-          <p className="text-3xl font-bold mt-2 text-teal-600">
-            {stats?.stockItems ?? 0}
-          </p>
+        {/* Charts */}
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Revenue Bar Chart */}
+          <div className="bg-white p-6 rounded-xl shadow">
+            <h2 className="text-lg font-semibold mb-4">📈 Revenue Growth</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={revenueData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="year" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="value" fill="#3b82f6" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Email Sent Pie Chart */}
+          <div className="bg-white p-6 rounded-xl shadow">
+            <h2 className="text-lg font-semibold mb-4">📨 Email Sent</h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={emailData}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={120}
+                  fill="#8884d8"
+                  dataKey="value"
+                  label
+                >
+                  {emailData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={["#3b82f6", "#10b981", "#f59e0b"][index]}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition">
-          <h2 className="text-lg font-semibold text-gray-700">Low Stock</h2>
-          <p className="text-3xl font-bold mt-2 text-red-600">
-            {stats?.lowStock ?? 0}
-          </p>
+        {/* Visitors Trend */}
+        <div className="bg-white mt-8 p-6 rounded-xl shadow">
+          <h2 className="text-lg font-semibold mb-4">👥 Unique Visitors</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={revenueData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="year" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="value" stroke="#0ea5e9" />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
-    </div>
     </div>
   );
 }
