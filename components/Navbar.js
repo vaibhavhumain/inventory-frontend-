@@ -8,7 +8,7 @@ import { Menu, X, LogOut } from "lucide-react";
 
 export default function Navbar() {
   const router = useRouter();
-  const pathname = usePathname(); // ✅ detect active page
+  const pathname = usePathname();
   const [user, setUser] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
