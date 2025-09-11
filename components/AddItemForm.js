@@ -13,7 +13,7 @@ export default function AddItemForm({ onClose, onSave }) {
     closingQty: "",
     storeLocation: "",
     remarks: "",
-    suppliers: [{ name: "", amount: "" }], // 🆕 suppliers array
+    suppliers: [{ name: "", amount: "" }], // amount = rate per unit
   });
 
   const handleChange = (e) => {
@@ -34,26 +34,27 @@ export default function AddItemForm({ onClose, onSave }) {
       ...prev,
       suppliers: [...prev.suppliers, { name: "", amount: "" }],
     }));
+
   const removeSupplier = (index) =>
     setFormData((prev) => ({
       ...prev,
       suppliers: prev.suppliers.filter((_, i) => i !== index),
     }));
 
-const handleSubmit = (e) => {
-  e.preventDefault();
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-  const enteredQty = formData.closingQty ? Number(formData.closingQty) : 0;
+    const enteredQty = formData.closingQty ? Number(formData.closingQty) : 0;
 
-  onSave({
-    ...formData,
-    weight: formData.weight ? Number(formData.weight) : undefined,
-    closingQty: enteredQty, // just send the entered qty
-    unit: formData.unit?.trim(),
-    category: formData.category?.trim(),
-    suppliers: formData.suppliers.filter((s) => s.name || s.amount),
-  });
-};
+    onSave({
+      ...formData,
+      weight: formData.weight ? Number(formData.weight) : undefined,
+      closingQty: enteredQty,
+      unit: formData.unit?.trim(),
+      category: formData.category?.trim(),
+      suppliers: formData.suppliers.filter((s) => s.name || s.amount),
+    });
+  };
 
   // ✅ Units
   const unitOptions = [
@@ -111,7 +112,9 @@ const handleSubmit = (e) => {
             </label>
             <div className="flex gap-2">
               <select
-                value={formData.customCategoryMode ? "CUSTOM" : formData.category}
+                value={
+                  formData.customCategoryMode ? "CUSTOM" : formData.category
+                }
                 onChange={(e) => {
                   if (e.target.value === "CUSTOM") {
                     setFormData((prev) => ({
@@ -144,7 +147,10 @@ const handleSubmit = (e) => {
                   placeholder="Enter Category"
                   value={formData.category}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, category: e.target.value }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      category: e.target.value,
+                    }))
                   }
                   className="w-40 border px-3 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
                 />
@@ -268,7 +274,7 @@ const handleSubmit = (e) => {
           {/* 🆕 Supplier Section */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Suppliers
+              Suppliers (Rate per unit)
             </label>
             {formData.suppliers.map((supplier, index) => (
               <div key={index} className="flex gap-2 mb-2">
@@ -283,7 +289,7 @@ const handleSubmit = (e) => {
                 />
                 <input
                   type="number"
-                  placeholder="Amount"
+                  placeholder="Rate per unit"
                   value={supplier.amount}
                   onChange={(e) =>
                     handleSupplierChange(index, "amount", e.target.value)
