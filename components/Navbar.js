@@ -26,9 +26,8 @@ export default function Navbar() {
     { href: "/feed", label: "Feed Stock" },
     { href: "/issue", label: "Issue Stock" },
     { href: "/items", label: "Items" },
-    { href: "/analytics", label: "Analytics" },
+    // { href: "/analytics", label: "Analytics" },
   ];
-
   return (
     <nav className="bg-white shadow-md border-b sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

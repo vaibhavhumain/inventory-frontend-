@@ -5,12 +5,17 @@ import AnalysisCard from "../../../components/AnalysisCard";
 import AnalysisCharts from "../../../components/AnalysisCharts";
 import Navbar from "../../../components/Navbar";
 import API from "../../../utils/api";
-import { TrendingUp, AlertTriangle, Package } from "lucide-react";
+import {
+  Package,
+  AlertTriangle,
+  TrendingDown,
+  BarChart3,
+} from "lucide-react";
 
 // Utility to get start/end of a month
 function getMonthRange(year, month) {
   const startDate = new Date(year, month, 1);
-  const endDate = new Date(year, month + 1, 0); // last day of month
+  const endDate = new Date(year, month + 1, 0);
   return {
     startDate: startDate.toISOString().split("T")[0],
     endDate: endDate.toISOString().split("T")[0],
@@ -24,29 +29,29 @@ export default function AnalyticsPage() {
   const [stockValue, setStockValue] = useState(null);
   const [consumption, setConsumption] = useState([]);
   const [reorder, setReorder] = useState([]);
-  const [turnover, setTurnover] = useState([]);
-  const [loading, setLoading] = useState(false); // ✅ NEW
+  const [monthlyTrend, setMonthlyTrend] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const fetchData = async (y, m) => {
     try {
-      setLoading(true); // ✅ start loading
+      setLoading(true);
       const { startDate, endDate } = getMonthRange(y, m);
 
-      const [valRes, conRes, reoRes, turRes] = await Promise.all([
+      const [valRes, conRes, reoRes, trendRes] = await Promise.all([
         API.get("/analysis/stock-value"),
         API.get("/analysis/consumption", { params: { startDate, endDate } }),
         API.get("/analysis/reorder"),
-        API.get("/analysis/turnover"),
+        API.get("/analysis/consumption-trend"), // new endpoint for monthly
       ]);
 
       setStockValue(valRes.data);
-      setConsumption(conRes.data);
+      setConsumption(conRes.data.consumption || []);
       setReorder(reoRes.data);
-      setTurnover(turRes.data);
+      setMonthlyTrend(trendRes.data || []);
     } catch (err) {
       console.error("Error loading analytics:", err);
     } finally {
-      setLoading(false); // ✅ stop loading
+      setLoading(false);
     }
   };
 
@@ -54,27 +59,37 @@ export default function AnalyticsPage() {
     fetchData(year, month);
   }, [year, month]);
 
-  // ✅ Calculate Fast vs Slow summary
-  const fastCount = turnover.filter((t) => t.type === "Fast-moving").length;
-  const slowCount = turnover.filter((t) => t.type === "Slow-moving").length;
-
   const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December",
   ];
+
+  // Derived values
+  const outOfStockCount = reorder.filter((r) => r.currentQty === 0).length;
+  const belowReorderCount = reorder.filter((r) => r.needsReorder).length;
+  const totalConsumption = consumption.reduce((sum, c) => sum + c.totalIssued, 0);
+
+  // Top 5 consumption
+  const top5Consumption = [...consumption]
+    .sort((a, b) => b.totalIssued - a.totalIssued)
+    .slice(0, 5)
+    .map((c) => ({
+      name: c.description || c.code || c._id,
+      value: c.totalIssued,
+    }));
 
   return (
     <>
       <Navbar />
       <div className="bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 min-h-screen p-8">
-        {/* Page Header */}
+        {/* Header */}
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
               📊 Inventory Analytics
             </h1>
             <p className="text-gray-500 mt-1">
-              Insights into stock usage, value, and performance.
+              A simple overview of stock health and usage.
             </p>
           </div>
 
@@ -108,7 +123,7 @@ export default function AnalyticsPage() {
 
         <div className="max-w-7xl mx-auto space-y-10">
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <AnalysisCard
               title="Total Stock Value"
               value={stockValue?.totalStockValue?.toLocaleString("en-IN", {
@@ -120,57 +135,47 @@ export default function AnalyticsPage() {
             />
 
             <AnalysisCard
-              title="Items Below Reorder"
-              value={reorder.filter((r) => r.needsReorder).length}
-              icon={<AlertTriangle className="text-red-600" size={28} />}
+              title="Out of Stock Items"
+              value={outOfStockCount}
+              icon={<TrendingDown className="text-red-600" size={28} />}
               color="red"
             />
 
             <AnalysisCard
-              title="Fast-moving Items"
-              value={fastCount}
-              icon={<TrendingUp className="text-green-600" size={28} />}
+              title="Below Reorder"
+              value={belowReorderCount}
+              icon={<AlertTriangle className="text-orange-500" size={28} />}
+              color="orange"
+            />
+
+            <AnalysisCard
+              title={`Consumption (${months[month]})`}
+              value={totalConsumption}
+              icon={<BarChart3 className="text-green-600" size={28} />}
               color="green"
             />
           </div>
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Consumption by Item */}
+            {/* Top 5 Issued */}
             <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition">
               <AnalysisCharts
-                title={`Consumption by Item (${months[month]} ${year})`}
+                title={`Top 5 Issued Items (${months[month]} ${year})`}
                 type="bar"
-                data={
-                  consumption.consumption?.map((c) => ({
-                    name: c.description || c.code || c._id,
-                    value: c.totalIssued,
-                  })) || []
-                }
+                data={top5Consumption}
               />
             </div>
 
-            {/* Turnover Ratios */}
+            {/* Monthly Trend */}
             <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition">
               <AnalysisCharts
-                title="Turnover Ratio (by Item)"
-                type="bar"
-                data={turnover.map((t) => ({
-                  name: t.itemCode,
-                  value: Number(t.turnoverRatio.toFixed(2)),
+                title="Issues Over Time"
+                type="line"
+                data={monthlyTrend.map((t) => ({
+                  name: `${months[t.month - 1]} ${t.year}`,
+                  value: t.totalIssued,
                 }))}
-              />
-            </div>
-
-            {/* Fast vs Slow-moving */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition lg:col-span-2">
-              <AnalysisCharts
-                title="Fast vs Slow Moving Items"
-                type="pie"
-                data={[
-                  { name: "Fast-moving", value: fastCount },
-                  { name: "Slow-moving", value: slowCount },
-                ]}
               />
             </div>
           </div>
