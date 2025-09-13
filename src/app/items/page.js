@@ -4,7 +4,10 @@ import Navbar from "../../../components/Navbar";
 import API from "../../../utils/api";
 import SearchBar from "../../../components/SearchBar";
 import AddItemForm from "../../../components/AddItemForm";
-import ItemModal from "../../../components/ItemModal"; // modal component
+import ItemModal from "../../../components/ItemModal";
+import SubToUserHistoryTable from "../../../components/SubToUserHistoryTable";
+import StockHistoryTable from "../../../components/StockHistoryTable";
+import SupplierHistoryTable from "../../../components/SupplierHistoryTable";
 import Link from "next/link";
 
 export default function ItemsPage() {
@@ -88,16 +91,21 @@ export default function ItemsPage() {
     );
   };
 
-  // Fetch history (stock + suppliers)
+  // Fetch history (stock + suppliers + sub→user)
   const fetchHistory = async (code) => {
     try {
       const res = await API.get(`/items/${code}/history`);
+      const billsRes = await API.get(
+        `/issue-bills?itemCode=${code}&type=SUB_TO_USER`
+      );
+
       setHistoryData((prev) => ({
         ...prev,
         [code]: {
           stock: res.data.history || [],
           suppliers: res.data.suppliers || [],
           supplierHistory: res.data.supplierHistory || [],
+          subToUserBills: billsRes.data || [],
         },
       }));
     } catch (err) {
@@ -159,23 +167,23 @@ export default function ItemsPage() {
             <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
             <div className="overflow-y-auto max-h-[600px]">
               <table className="w-full text-sm">
-                <thead className="bg-blue-600 text-white text-xs uppercase sticky top-0 z-10">
+                <thead className="bg-gradient-to-r from-blue-700 to-blue-600 text-white text-xs uppercase sticky top-0 z-10">
                   <tr>
-                    <th className="px-6 py-3 text-left">Sr No</th>
-                    <th className="px-6 py-3 text-left">Code</th>
-                    <th className="px-6 py-3 text-left">Category</th>
-                    <th className="px-6 py-3 text-left">Description</th>
-                    <th className="px-6 py-3 text-left">Plant</th>
-                    <th className="px-6 py-3 text-left">Weight</th>
-                    <th className="px-6 py-3 text-left">UOM</th>
-                    <th className="px-6 py-3 text-left">Quantity</th>
-                    <th className="px-6 py-3 text-left">Main Store</th>
-                    <th className="px-6 py-3 text-left">Sub Store</th>
-                    <th className="px-6 py-3 text-left">Remarks</th>
-                    <th className="px-6 py-3 text-left">History</th>
+                    <th className="px-6 py-3 text-left font-semibold">Sr No</th>
+                    <th className="px-6 py-3 text-left font-semibold">Code</th>
+                    <th className="px-6 py-3 text-left font-semibold">Category</th>
+                    <th className="px-6 py-3 text-left font-semibold">Description</th>
+                    <th className="px-6 py-3 text-left font-semibold">Plant</th>
+                    <th className="px-6 py-3 text-left font-semibold">Weight</th>
+                    <th className="px-6 py-3 text-left font-semibold">UOM</th>
+                    <th className="px-6 py-3 text-left font-semibold">Quantity</th>
+                    <th className="px-6 py-3 text-left font-semibold">Main Store</th>
+                    <th className="px-6 py-3 text-left font-semibold">Sub Store</th>
+                    <th className="px-6 py-3 text-left font-semibold">Remarks</th>
+                    <th className="px-6 py-3 text-left font-semibold">History</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -185,9 +193,9 @@ export default function ItemsPage() {
                         onClick={() => {
                           const { _id, __v, ...rest } = item;
                           setSelectedItem(rest);
-                          fetchHistory(item.code); // ✅ load history for modal too
+                          fetchHistory(item.code);
                         }}
-                        className="hover:bg-blue-50 transition duration-200 cursor-pointer"
+                        className="hover:bg-blue-50 transition duration-150 cursor-pointer"
                       >
                         <td className="px-6 py-3 font-semibold text-gray-900">
                           {index + 1}
@@ -248,74 +256,23 @@ export default function ItemsPage() {
                       {/* Expanded History */}
                       {expandedRow === item.code && (
                         <tr className="bg-gray-50">
-                          <td colSpan="12" className="px-6 py-4 space-y-6">
-                            {/* Stock History */}
-                            <div>
-                              <h3 className="font-semibold text-gray-800 mb-2">
-                                📊 Stock History
-                              </h3>
-                              <div className="rounded-lg border border-gray-200 overflow-hidden bg-white">
-                                <table className="w-full text-xs">
-                                  <thead className="bg-gray-100 text-gray-600">
-                                    <tr>
-                                      <th className="px-2 py-2 text-left">Date</th>
-                                      <th className="px-2 py-2 text-left">In</th>
-                                      <th className="px-2 py-2 text-left">Out</th>
-                                      <th className="px-2 py-2 text-left">Closing Qty</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {(historyData[item.code]?.stock || []).map((h, i) => (
-                                      <tr key={i}>
-                                        <td className="px-2 py-2 text-gray-700">
-                                          {new Date(h.date).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-2 py-2 text-green-600 font-medium">
-                                          {h.in}
-                                        </td>
-                                        <td className="px-2 py-2 text-red-600 font-medium">
-                                          {h.out}
-                                        </td>
-                                        <td className="px-2 py-2 text-gray-800 font-semibold">
-                                          {h.closingQty}
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                            </div>
+                          <td colSpan="12" className="px-6 py-6 space-y-6 rounded-b-lg shadow-inner">
+                            <StockHistoryTable
+                              stock={historyData[item.code]?.stock || []}
+                            />
 
-                            {/* Supplier History */}
-                            <div>
-                              <h3 className="font-semibold text-gray-800 mb-2">
-                                🏭 Supplier History
-                              </h3>
-                              <div className="rounded-lg border border-gray-200 overflow-hidden bg-white">
-                                <table className="w-full text-xs">
-                                  <thead className="bg-gray-100 text-gray-600">
-                                    <tr>
-                                      <th className="px-2 py-2 text-left">Date</th>
-                                      <th className="px-2 py-2 text-left">Supplier</th>
-                                      <th className="px-2 py-2 text-left">Amount</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {(historyData[item.code]?.supplierHistory || []).map((s, i) => (
-                                      <tr key={i}>
-                                        <td className="px-2 py-2 text-gray-700">
-                                          {new Date(s.date).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-2 py-2 text-gray-700">{s.supplierName}</td>
-                                        <td className="px-2 py-2 text-gray-800 font-semibold">
-                                          {s.amount}
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                            </div>
+                            <SupplierHistoryTable
+                              supplierHistory={
+                                historyData[item.code]?.supplierHistory || []
+                              }
+                            />
+
+                            <SubToUserHistoryTable
+                              bills={
+                                historyData[item.code]?.subToUserBills || []
+                              }
+                              itemId={item._id}
+                            />
                           </td>
                         </tr>
                       )}
@@ -341,19 +298,21 @@ export default function ItemsPage() {
       {selectedItem && (
         <ItemModal
           item={selectedItem}
-          historyData={historyData[selectedItem.code] || { stock: [], supplierHistory: [] }}
+          historyData={
+            historyData[selectedItem.code] || {
+              stock: [],
+              supplierHistory: [],
+            }
+          }
           onClose={() => setSelectedItem(null)}
           onSave={async (updated) => {
             const { _id, __v, ...clean } = updated;
-
-            // update items
             setItems((prev) =>
               prev.map((it) => (it.code === clean.code ? clean : it))
             );
             setFilteredItems((prev) =>
               prev.map((it) => (it.code === clean.code ? clean : it))
             );
-
             await fetchHistory(clean.code);
           }}
         />
