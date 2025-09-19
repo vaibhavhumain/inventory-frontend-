@@ -33,6 +33,7 @@ export default function Navbar() {
       ],
     },
     { href: "/items", label: "Items" },
+    {href: "/invoice", label: "Purchase Invoice" },
   ];
 
   return (
