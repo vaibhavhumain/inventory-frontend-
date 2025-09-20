@@ -39,6 +39,7 @@ export default function InvoicesPage() {
               {[
                 "Invoice Number",
                 "Date",
+                "Vendor",
                 "Party Name",
                 "Taxable Value",
                 "GST",
@@ -60,7 +61,7 @@ export default function InvoicesPage() {
                 (inv.totalInvoiceValue || 0) -
                 (inv.totalTaxableValue || 0) -
                 (inv.otherChargesAfterTax || 0) -
-                (inv.otherChargesBeforeTax || 0);
+                (inv.otherChargesBeforeTaxAmount || 0);
 
               return (
                 <tr key={inv._id} className="hover:bg-gray-50">
@@ -68,6 +69,14 @@ export default function InvoicesPage() {
                   <td className="border px-4 py-2">
                     {new Date(inv.date).toLocaleDateString()}
                   </td>
+
+                  {/* ✅ Vendor details (code + name + GST) */}
+                  <td className="border px-4 py-2">
+                    {inv.vendor
+                      ? `${inv.vendor.code || ""} - ${inv.vendor.name || ""} (${inv.vendor.gstNumber || "No GST"})`
+                      : "N/A"}
+                  </td>
+
                   <td className="border px-4 py-2">{inv.partyName}</td>
                   <td className="border px-4 py-2 text-right">
                     {inv.totalTaxableValue?.toFixed(2)}

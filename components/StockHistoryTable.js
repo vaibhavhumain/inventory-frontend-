@@ -1,50 +1,58 @@
 "use client";
 import React from "react";
 
-export default function StockHistoryTable({ stock = [] }) {
-  if (!stock.length) {
+export default function SupplierHistoryTable({ supplierHistory }) {
+  if (!supplierHistory || supplierHistory.length === 0) {
     return (
-      <div className="p-4 bg-gray-50 border border-dashed border-gray-300 rounded-lg text-center text-sm text-gray-500 italic">
-        No stock history available.
-      </div>
+      <p className="text-center text-gray-500 italic">
+        No supplier history available.
+      </p>
     );
   }
 
   return (
-    <div>
-      <h3 className="font-semibold text-gray-800 mb-3 text-lg flex items-center gap-2">
-        📊 Stock History
-      </h3>
-      <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
-        <table className="w-full text-sm border-collapse">
-          <thead className="bg-gradient-to-r from-green-600 to-green-500 text-white">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium">Date</th>
-              <th className="px-4 py-3 text-left font-medium">In</th>
-              <th className="px-4 py-3 text-left font-medium">Out</th>
-              <th className="px-4 py-3 text-left font-medium">Closing Qty</th>
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm border rounded-lg">
+        <thead className="bg-gray-200 text-gray-700 text-xs uppercase">
+          <tr>
+            <th className="px-4 py-2 text-left">Date</th>
+            <th className="px-4 py-2 text-left">Invoice No</th>
+            <th className="px-4 py-2 text-left">Supplier</th>
+            <th className="px-4 py-2 text-left">Description</th>
+            <th className="px-4 py-2 text-right">Qty</th>
+            <th className="px-4 py-2 text-right">Rate</th>
+            <th className="px-4 py-2 text-right">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {supplierHistory.map((h, idx) => (
+            <tr key={idx} className="hover:bg-gray-50">
+              <td className="px-4 py-2">
+                {new Date(h.date).toLocaleDateString()}
+              </td>
+              <td className="px-4 py-2 text-blue-600">{h.invoiceNumber}</td>
+              <td className="px-4 py-2">{h.supplierName}</td>
+              <td className="px-4 py-2">{h.description}</td>
+              <td className="px-4 py-2 text-right">{h.quantity}</td>
+              <td className="px-4 py-2 text-right">₹{h.rate}</td>
+              <td className="px-4 py-2 text-right font-semibold">₹{h.amount}</td>
             </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 bg-white">
-            {stock.map((h, i) => (
-              <tr key={i} className="hover:bg-green-50 transition duration-150">
-                <td className="px-4 py-2 text-gray-700">
-                  {new Date(h.date).toLocaleDateString()}
-                </td>
-                <td className="px-4 py-2 text-green-600 font-semibold">
-                  {h.in}
-                </td>
-                <td className="px-4 py-2 text-red-600 font-semibold">
-                  {h.out}
-                </td>
-                <td className="px-4 py-2 text-gray-900 font-bold">
-                  {h.closingQty}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+
+          <tr className="bg-gray-100 font-semibold">
+            <td colSpan="6" className="px-4 py-2 text-right">
+              Total →
+            </td>
+            <td className="px-4 py-2 text-right text-blue-700">
+              ₹
+              {supplierHistory.reduce(
+                (sum, h) => sum + (h.amount || 0),
+                0
+              )}
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 }

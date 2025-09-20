@@ -5,12 +5,11 @@ export default function SupplierHistoryTable({ supplierHistory = [] }) {
   if (!supplierHistory.length) {
     return (
       <div className="p-4 bg-gray-50 border border-dashed border-gray-300 rounded-lg text-center text-sm text-gray-500 italic">
-        No supplier history available.
+        No supplier / purchase history available.
       </div>
     );
   }
 
-  // ✅ Calculate total amount
   const totalAmount = supplierHistory.reduce(
     (sum, s) => sum + (s.amount || 0),
     0
@@ -19,14 +18,18 @@ export default function SupplierHistoryTable({ supplierHistory = [] }) {
   return (
     <div>
       <h3 className="font-semibold text-gray-800 mb-3 text-lg flex items-center gap-2">
-        🏭 Supplier History
+        🏭 Supplier / Purchase History
       </h3>
       <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
         <table className="w-full text-sm border-collapse">
           <thead className="bg-gradient-to-r from-purple-600 to-purple-500 text-white">
             <tr>
               <th className="px-4 py-3 text-left font-medium">Date</th>
+              <th className="px-4 py-3 text-left font-medium">Invoice No</th>
               <th className="px-4 py-3 text-left font-medium">Supplier</th>
+              <th className="px-4 py-3 text-left font-medium">Description</th>
+              <th className="px-4 py-3 text-left font-medium">Qty</th>
+              <th className="px-4 py-3 text-left font-medium">Rate</th>
               <th className="px-4 py-3 text-right font-medium">Amount</th>
             </tr>
           </thead>
@@ -36,8 +39,20 @@ export default function SupplierHistoryTable({ supplierHistory = [] }) {
                 <td className="px-4 py-2 text-gray-700">
                   {new Date(s.date).toLocaleDateString()}
                 </td>
+                <td className="px-4 py-2 text-blue-600 font-medium">
+                  {s.invoiceNumber || "-"}
+                </td>
                 <td className="px-4 py-2 text-gray-700 font-medium">
-                  {s.supplierName}
+                  {s.supplierName || s.partyName || "-"}
+                </td>
+                <td className="px-4 py-2 text-gray-600">
+                  {s.description || "-"}
+                </td>
+                <td className="px-4 py-2 text-gray-700">
+                  {s.quantity ?? "-"}
+                </td>
+                <td className="px-4 py-2 text-gray-700">
+                  {s.rate ?? "-"}
                 </td>
                 <td className="px-4 py-2 text-right text-gray-900 font-semibold">
                   ₹{s.amount?.toLocaleString() || 0}
@@ -47,7 +62,7 @@ export default function SupplierHistoryTable({ supplierHistory = [] }) {
           </tbody>
           <tfoot>
             <tr className="bg-gray-100">
-              <td colSpan="2" className="px-4 py-3 text-right font-semibold">
+              <td colSpan="6" className="px-4 py-3 text-right font-semibold">
                 Total →
               </td>
               <td className="px-4 py-3 text-right font-bold text-purple-700">
