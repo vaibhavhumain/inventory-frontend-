@@ -1,23 +1,59 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp, Package } from "lucide-react";
+import API from "../utils/api";
 
-export default function CategoryItemsTable({ items }) {
-  const [open, setOpen] = useState(false);
+export default function CategoryItemsTable() {
+  const [open, setOpen] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Filtered items
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const res = await API.get("/purchase-invoices");
+
+        const allItems = res.data.flatMap((inv) =>
+          inv.items.map((it) => ({
+            item: it.item,
+            description: it.description,
+            headQuantity: it.headQuantity,
+            headQuantityMeasurement: it.headQuantityMeasurement,
+            subQuantity: it.subQuantity,
+            subQuantityMeasurement: it.subQuantityMeasurement,
+            hsnCode: it.hsnCode,
+            rate: it.rate,
+            amount: it.amount,
+            gstRate: it.gstRate,
+            notes: it.notes,
+            invoiceNumber: inv.invoiceNumber,
+            partyName: inv.partyName,
+            date: inv.date,
+            location: "Main Store",
+          }))
+        );
+
+        setItems(allItems);
+      } catch (err) {
+        console.error("Error fetching items:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchItems();
+  }, []);
+
   const filteredItems = items.filter(
-    (item) => !selectedCategory || item.category === selectedCategory
+    (item) => !selectedCategory || item.hsnCode === selectedCategory
   );
 
-  // Unique categories
-  const categories = [...new Set(items.map((item) => item.category))];
+  const categories = [...new Set(items.map((item) => item.hsnCode))];
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-      {/* Header with toggle */}
+    <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden w-full">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex justify-between items-center px-5 py-4 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 transition text-left font-semibold text-gray-800"
@@ -36,13 +72,12 @@ export default function CategoryItemsTable({ items }) {
         )}
       </button>
 
-      {/* Dropdown content */}
       {open && (
         <div className="p-5 space-y-4">
           {/* Category Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Filter by Category
+              Filter by HSN Code
             </label>
             <select
               onChange={(e) => setSelectedCategory(e.target.value)}
@@ -59,86 +94,70 @@ export default function CategoryItemsTable({ items }) {
           </div>
 
           {/* Items Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-100 sticky top-0 z-10">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">
-                    #
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">
-                    Code
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">
-                    Category
-                  </th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-700">
-                    Description
-                  </th>
-                  <th className="px-4 py-3 text-center font-medium text-gray-700">
-                    Main Store Qty
-                  </th>
-                  <th className="px-4 py-3 text-center font-medium text-gray-700">
-                    Sub Store Qty
-                  </th>
-                  <th className="px-4 py-3 text-center font-medium text-gray-700">
-                    Closing Qty
-                  </th>
-                  <th className="px-4 py-3 text-center font-medium text-gray-700">
-                    Unit
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredItems.length > 0 ? (
-                  filteredItems.map((item, index) => (
-                    <tr
-                      key={item._id || index}
-                      className={`${
-                        index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                      } hover:bg-blue-50 transition-colors`}
-                    >
-                      <td className="px-4 py-3 font-medium text-gray-700">
-                        {index + 1}
-                      </td>
-                      <td className="px-4 py-3 text-gray-800">{item.code}</td>
-                      <td className="px-4 py-3 text-gray-600">{item.category}</td>
-                      <td className="px-4 py-3 text-gray-600">
-                        {item.description || "-"}
-                      </td>
-                      <td className="px-4 py-3 text-center text-gray-700">
-                        {item.mainStoreQty || 0}
-                      </td>
-                      <td className="px-4 py-3 text-center text-gray-700">
-                        {item.subStoreQty || 0}
-                      </td>
-                      <td
-                        className={`px-4 py-3 text-center font-semibold ${
-                          (item.closingQty || 0) < 10
-                            ? "text-red-600"
-                            : "text-green-600"
-                        }`}
+          {loading ? (
+            <p className="text-center text-gray-500">Loading items...</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm table-fixed">
+                <thead className="bg-gray-100 sticky top-0 z-10">
+                  <tr>
+                    <th className="px-4 py-3 w-[60px]">S.No</th>
+                    <th className="px-4 py-3 w-[100px]">Item</th>
+                    <th className="px-4 py-3 w-[150px]">Description</th>
+                    <th className="px-4 py-3 w-[100px]">Head Qty</th>
+                    <th className="px-4 py-3 w-[100px]">Head UOM</th>
+                    <th className="px-4 py-3 w-[100px]">Sub Qty</th>
+                    <th className="px-4 py-3 w-[100px]">Sub UOM</th>
+                    <th className="px-4 py-3 w-[120px]">HSN Code</th>
+                    <th className="px-4 py-3 w-[100px]">Rate</th>
+                    <th className="px-4 py-3 w-[100px]">Amount</th>
+                    <th className="px-4 py-3 w-[80px]">GST %</th>
+                    <th className="px-4 py-3 w-[120px]">Location</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {filteredItems.length > 0 ? (
+                    filteredItems.map((it, index) => (
+                      <tr
+                        key={`${it.item}-${index}`}
+                        className="hover:bg-blue-50 transition duration-150"
                       >
-                        {item.closingQty || 0}
-                      </td>
-                      <td className="px-4 py-3 text-center text-gray-600">
-                        {item.unit || "-"}
+                        <td className="px-4 py-2 text-center">{index + 1}</td>
+                        <td className="px-4 py-2 font-semibold text-blue-700">
+                          {it.item}
+                        </td>
+                        <td className="px-4 py-2">{it.description || "-"}</td>
+                        <td className="px-4 py-2 text-center">
+                          {it.headQuantity}
+                        </td>
+                        <td className="px-4 py-2 text-center">
+                          {it.headQuantityMeasurement}
+                        </td>
+                        <td className="px-4 py-2 text-center">{it.subQuantity}</td>
+                        <td className="px-4 py-2 text-center">
+                          {it.subQuantityMeasurement}
+                        </td>
+                        <td className="px-4 py-2 text-center">{it.hsnCode}</td>
+                        <td className="px-4 py-2 text-right">{it.rate}</td>
+                        <td className="px-4 py-2 text-right">{it.amount}</td>
+                        <td className="px-4 py-2 text-center">{it.gstRate}</td>
+                        <td className="px-4 py-2 text-center">{it.location}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan="12"
+                        className="px-4 py-6 text-center text-gray-500 italic"
+                      >
+                        No items found
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan="8"
-                      className="px-4 py-6 text-center text-gray-500 italic"
-                    >
-                      No items found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>
