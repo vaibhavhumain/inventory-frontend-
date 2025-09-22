@@ -3,27 +3,30 @@ import { useState } from "react";
 import API from "../utils/api";
 
 export default function VendorModal({ onClose, onSave }) {
-  const [code, setCode] = useState("");   
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [state, setState] = useState("");
   const [gstNumber, setGstNumber] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSave = async () => {
-    if (!code || !name) {
-      alert("Vendor Code and Name are required");
+    if (!name) {
+      alert("Vendor Name is required");
       return;
     }
 
-    const payload = { code, name, address, state, gstNumber };
+    const payload = { name, address, state, gstNumber };
 
     try {
+      setLoading(true);
       const res = await API.post("/vendors", payload);
-      onSave(res.data);
+      onSave(res.data); // new vendor with auto-generated code
       onClose();
     } catch (err) {
       console.error("Error adding vendor:", err.response?.data || err.message);
       alert(`Error: ${err.response?.data?.error || "Failed to add vendor"}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -33,17 +36,7 @@ export default function VendorModal({ onClose, onSave }) {
         <h2 className="text-xl font-bold mb-4">Add New Vendor</h2>
 
         <div className="space-y-3">
-          <div>
-            <label className="block font-semibold">Vendor Code</label>
-            <input
-              type="text"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              required
-              className="w-full border p-2 rounded"
-              placeholder="Enter unique vendor code"
-            />
-          </div>
+          {/* Vendor Code is auto-generated, no input here */}
 
           <div>
             <label className="block font-semibold">Vendor Name</label>
@@ -53,6 +46,7 @@ export default function VendorModal({ onClose, onSave }) {
               onChange={(e) => setName(e.target.value)}
               required
               className="w-full border p-2 rounded"
+              placeholder="Enter vendor name"
             />
           </div>
 
@@ -62,7 +56,9 @@ export default function VendorModal({ onClose, onSave }) {
               type="text"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
+              required
               className="w-full border p-2 rounded"
+              placeholder="Enter address"
             />
           </div>
 
@@ -72,7 +68,9 @@ export default function VendorModal({ onClose, onSave }) {
               type="text"
               value={state}
               onChange={(e) => setState(e.target.value)}
+              required
               className="w-full border p-2 rounded"
+              placeholder="Enter state"
             />
           </div>
 
@@ -81,8 +79,10 @@ export default function VendorModal({ onClose, onSave }) {
             <input
               type="text"
               value={gstNumber}
+              required
               onChange={(e) => setGstNumber(e.target.value)}
               className="w-full border p-2 rounded"
+              placeholder="Enter GST number"
             />
           </div>
 
@@ -90,6 +90,7 @@ export default function VendorModal({ onClose, onSave }) {
             <button
               type="button"
               onClick={onClose}
+              
               className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
             >
               Cancel
@@ -97,9 +98,14 @@ export default function VendorModal({ onClose, onSave }) {
             <button
               type="button"
               onClick={handleSave}
-              className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700"
+              disabled={loading}
+              className={`px-4 py-2 rounded text-white ${
+                loading
+                  ? "bg-green-400 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700"
+              }`}
             >
-              Save
+              {loading ? "Saving..." : "Save"}
             </button>
           </div>
         </div>

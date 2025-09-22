@@ -12,18 +12,13 @@ export default function SearchBar({ onSearch, placeholder = "Search..." }) {
     setQuery("");     
     onSearch("");     
   };
-
-  // Auto search with debounce (300ms)
   useEffect(() => {
     const timer = setTimeout(() => {
       onSearch(query);
     }, 300);
-
     return () => clearTimeout(timer);
-    // only depend on query to avoid infinite loop
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
-
+ 
   return (
     <div className="mb-6 flex justify-center gap-2">
       <input

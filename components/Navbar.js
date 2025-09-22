@@ -1,6 +1,5 @@
 "use client";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { clearAuth, getUser } from "../utils/auth";
 import { useEffect, useState } from "react";
@@ -24,7 +23,6 @@ export default function Navbar() {
 
   const navLinks = [
     { href: "/dashboard", label: "Dashboard" },
-    { href: "/feed", label: "Feed Stock" },
     {
       label: "Issue Stock",
       children: [
@@ -33,79 +31,68 @@ export default function Navbar() {
       ],
     },
     { href: "/items", label: "Items" },
-    {href: "/invoice", label: "Purchase Invoice" },
+    { href: "/invoice", label: "Purchase Invoice" },
   ];
 
   return (
     <nav className="bg-white shadow-md border-b sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-          {/* Logo + Brand */}
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <Image
-              src="/logo.png"
-              alt="InveTrack Logo"
-              width={36}
-              height={36}
-              className="rounded"
-            />
-            <span className="font-bold text-blue-700 text-xl tracking-wide">
-              InveTrack
-            </span>
-          </Link>
 
-          {/* Desktop Menu */}
-          <div className="hidden sm:flex items-center gap-8">
-            {navLinks.map((link) =>
-              link.children ? (
-                <div key={link.label} className="relative">
-                  <button
-                    onClick={() => setIssueDropdownOpen(!issueDropdownOpen)}
-                    className={`flex items-center gap-1 font-medium ${
-                      pathname.startsWith("/issue")
+          {/* Nav Center */}
+          <div className="flex-1 flex justify-center">
+            <div className="hidden sm:flex items-center gap-8">
+              {navLinks.map((link) =>
+                link.children ? (
+                  <div key={link.label} className="relative">
+                    <button
+                      onClick={() => setIssueDropdownOpen(!issueDropdownOpen)}
+                      className={`flex items-center gap-1 font-medium ${
+                        pathname.startsWith("/issue")
+                          ? "text-blue-600"
+                          : "text-gray-700 hover:text-blue-600"
+                      }`}
+                    >
+                      {link.label} <ChevronDown size={16} />
+                    </button>
+
+                    {issueDropdownOpen && (
+                      <div className="absolute bg-white border rounded shadow-lg mt-2 w-40 z-50">
+                        {link.children.map((child) => (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            onClick={() => setIssueDropdownOpen(false)}
+                            className={`block px-4 py-2 text-sm ${
+                              pathname === child.href
+                                ? "bg-blue-50 text-blue-600"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`font-medium ${
+                      pathname === link.href
                         ? "text-blue-600"
                         : "text-gray-700 hover:text-blue-600"
                     }`}
                   >
-                    {link.label} <ChevronDown size={16} />
-                  </button>
-
-                  {issueDropdownOpen && (
-                    <div className="absolute bg-white border rounded shadow-lg mt-2 w-40 z-50">
-                      {link.children.map((child) => (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          onClick={() => setIssueDropdownOpen(false)} // close after click
-                          className={`block px-4 py-2 text-sm ${
-                            pathname === child.href
-                              ? "bg-blue-50 text-blue-600"
-                              : "text-gray-700 hover:bg-gray-100"
-                          }`}
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`font-medium ${
-                    pathname === link.href
-                      ? "text-blue-600"
-                      : "text-gray-700 hover:text-blue-600"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              )
-            )}
+                    {link.label}
+                  </Link>
+                )
+              )}
+            </div>
           </div>
 
-          {/* User Info + Logout */}
+          {/* User Info + Logout (Right aligned) */}
           <div className="flex items-center gap-4">
             {user && (
               <div className="hidden sm:flex flex-col text-right">
@@ -123,7 +110,7 @@ export default function Navbar() {
               Logout
             </button>
 
-            {/* Mobile menu button */}
+            {/* Mobile toggle button */}
             <button
               className="sm:hidden text-gray-600 hover:text-blue-600"
               onClick={() => setMobileOpen(!mobileOpen)}
@@ -134,7 +121,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Dropdown */}
+      {/* Mobile Menu */}
       {mobileOpen && (
         <div className="sm:hidden bg-white border-t shadow-md animate-slide-down">
           <div className="px-4 py-4 space-y-4">

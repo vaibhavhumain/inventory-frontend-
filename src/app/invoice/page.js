@@ -203,7 +203,7 @@ export default function InvoiceFormPage() {
                   <option value="">-- Select Vendor --</option>
                   {vendors.map((v) => (
                     <option key={v._id} value={v._id}>
-                      {v.name} ({v.gstNumber || "No GST"})
+                      {v.name} ({v.code || "No GST"})
                     </option>
                   ))}
                 </select>
@@ -221,8 +221,8 @@ export default function InvoiceFormPage() {
                   onClose={() => setShowVendorModal(false)}
                   onSave={(newVendor) => {
                     setVendors((prev) => [...prev, newVendor]);
-                    setVendorId(newVendor._id);   // ✅ ensure we get the ObjectId
-                    setPartyName(newVendor.name);
+                    setVendorId(newVendor._id);   
+                    setPartyName( newVendor.name);
                   }}
                 />
               )}

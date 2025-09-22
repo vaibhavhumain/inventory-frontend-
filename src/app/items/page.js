@@ -3,20 +3,17 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../../../components/Navbar";
 import API from "../../../utils/api";
 import SearchBar from "../../../components/SearchBar";
-import SupplierHistoryTable from "../../../components/SupplierHistoryTable";
 
 export default function ItemsPage() {
   const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showSearch, setShowSearch] = useState(false);
   const [filteredItems, setFilteredItems] = useState([]);
-  const [expandedRow, setExpandedRow] = useState(null);
-  const [historyData, setHistoryData] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const fetchItems = async () => {
     try {
+      setLoading(true);
       const res = await API.get("/purchase-invoices");
-
       const allItems = res.data.flatMap((inv) =>
         inv.items.map((it) => ({
           item: it.item,
@@ -36,9 +33,7 @@ export default function ItemsPage() {
           location: "Main Store",
         }))
       );
-
       setItems(allItems);
-      setFilteredItems(allItems);
     } catch (error) {
       console.error("Error fetching items:", error);
     } finally {
@@ -51,131 +46,148 @@ export default function ItemsPage() {
   }, []);
 
   const handleSearch = (query) => {
+    setHasSearched(true);
     if (!query) {
-      setFilteredItems(items);
+      setFilteredItems([]);
       return;
     }
     const lower = query.toLowerCase();
-    setFilteredItems(
-      items.filter(
-        (it) =>
-          it.item?.toLowerCase().includes(lower) ||
-          it.description?.toLowerCase().includes(lower) ||
-          it.hsnCode?.toLowerCase().includes(lower) ||
-          it.notes?.toLowerCase().includes(lower)
-      )
+    const results = items.filter(
+      (it) =>
+        it.item?.toLowerCase().includes(lower) ||
+        it.description?.toLowerCase().includes(lower) ||
+        it.hsnCode?.toLowerCase().includes(lower) ||
+        it.notes?.toLowerCase().includes(lower)
     );
-  };
-
-  const fetchHistory = async (code) => {
-    try {
-      const res = await API.get(`/purchase-invoices/items/${code}/history`);
-      setHistoryData((prev) => ({
-        ...prev,
-        [code]: {
-          supplierHistory: res.data.supplierHistory || [],
-          stock: res.data.stock || [],
-        },
-      }));
-    } catch (err) {
-      console.error("Error fetching history:", err);
-    }
-  };
-
-  const toggleHistory = async (code) => {
-    if (expandedRow === code) {
-      setExpandedRow(null);
-      return;
-    }
-    await fetchHistory(code);
-    setExpandedRow(code);
+    setFilteredItems(results);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+      <div className="max-w-[98%] mx-auto px-4 py-6">
+        <h1 className="text-xl font-bold text-gray-800 mb-4">
+          📦 Item Ledger
+        </h1>
 
-      <div className="max-w-[95%] mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <button
-            onClick={() => setShowSearch((prev) => !prev)}
-            className="px-4 py-2 rounded-lg bg-gray-600 text-white shadow hover:bg-gray-700 transition font-medium"
-          >
-            🔍 Search
-          </button>
+        <div className="mb-6">
+          <SearchBar onSearch={handleSearch} />
         </div>
 
-        {showSearch && (
-          <div className="mb-6">
-            <SearchBar onSearch={handleSearch} />
-          </div>
+        {loading && (
+          <p className="text-center text-gray-500">Loading items...</p>
         )}
 
-        {loading ? (
-          <p className="text-center text-gray-500">Loading items...</p>
-        ) : (
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm table-fixed">
-                <thead className="bg-gradient-to-r from-blue-700 to-blue-600 text-white text-xs uppercase sticky top-0 z-10">
+        {!loading && hasSearched && (
+          <div className="bg-white rounded-lg shadow border border-gray-300 overflow-x-auto">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="bg-blue-600 text-white text-xs uppercase">
+                  <th className="border border-gray-300 px-3 py-2 text-left w-[50px]">
+                    S.No
+                  </th>
+                  <th className="border border-gray-300 px-3 py-2 text-left w-[120px]">
+                    Item
+                  </th>
+                  <th className="border border-gray-300 px-3 py-2 text-left w-[200px]">
+                    Description
+                  </th>
+                  <th className="border border-gray-300 px-3 py-2 text-center w-[100px]">
+                    Head Qty
+                  </th>
+                  <th className="border border-gray-300 px-3 py-2 text-center w-[100px]">
+                    Head UOM
+                  </th>
+                  <th className="border border-gray-300 px-3 py-2 text-center w-[100px]">
+                    Sub Qty
+                  </th>
+                  <th className="border border-gray-300 px-3 py-2 text-center w-[100px]">
+                    Sub UOM
+                  </th>
+                  <th className="border border-gray-300 px-3 py-2 text-center w-[100px]">
+                    HSN Code
+                  </th>
+                  <th className="border border-gray-300 px-3 py-2 text-right w-[80px]">
+                    Rate
+                  </th>
+                  <th className="border border-gray-300 px-3 py-2 text-right w-[100px]">
+                    Amount
+                  </th>
+                  <th className="border border-gray-300 px-3 py-2 text-center w-[70px]">
+                    GST %
+                  </th>
+                  <th className="border border-gray-300 px-3 py-2 text-center w-[120px]">
+                    Party
+                  </th>
+                  <th className="border border-gray-300 px-3 py-2 text-center w-[120px]">
+                    Date
+                  </th>
+                  <th className="border border-gray-300 px-3 py-2 text-center w-[120px]">
+                    Location
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredItems.length > 0 ? (
+                  filteredItems.map((it, index) => (
+                    <tr
+                      key={`${it.item}-${index}`}
+                      className={`${
+                        index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      } hover:bg-yellow-50 transition`}
+                    >
+                      <td className="border px-3 py-2 text-center">
+                        {index + 1}
+                      </td>
+                      <td className="border px-3 py-2 font-medium text-blue-700">
+                        {it.item}
+                      </td>
+                      <td className="border px-3 py-2">{it.description}</td>
+                      <td className="border px-3 py-2 text-center">
+                        {it.headQuantity}
+                      </td>
+                      <td className="border px-3 py-2 text-center">
+                        {it.headQuantityMeasurement}
+                      </td>
+                      <td className="border px-3 py-2 text-center">
+                        {it.subQuantity}
+                      </td>
+                      <td className="border px-3 py-2 text-center">
+                        {it.subQuantityMeasurement}
+                      </td>
+                      <td className="border px-3 py-2 text-center">
+                        {it.hsnCode}
+                      </td>
+                      <td className="border px-3 py-2 text-right">{it.rate}</td>
+                      <td className="border px-3 py-2 text-right">
+                        {it.amount}
+                      </td>
+                      <td className="border px-3 py-2 text-center">
+                        {it.gstRate}
+                      </td>
+                      <td className="border px-3 py-2 text-center">
+                        {it.partyName}
+                      </td>
+                      <td className="border px-3 py-2 text-center">
+                        {new Date(it.date).toLocaleDateString("en-IN")}
+                      </td>
+                      <td className="border px-3 py-2 text-center">
+                        {it.location}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
                   <tr>
-                    <th className="px-4 py-2 w-[60px]">S.No</th>
-                    <th className="px-4 py-2 w-[40px]">Item</th>
-                    <th className="px-4 py-2 w-[70px]">Description</th>
-                    <th className="px-4 py-2 w-[100px]">Head Qty</th>
-                    <th className="px-4 py-2 w-[100px]">Head UOM</th>
-                    <th className="px-4 py-2 w-[100px]">Sub Qty</th>
-                    <th className="px-4 py-2 w-[100px]">Sub UOM</th>
-                    <th className="px-4 py-2 w-[110px]">HSN Code</th>
-                    <th className="px-4 py-2 w-[40px]">Rate</th>
-                    <th className="px-4 py-2 w-[50px]">Amount</th>
-                    <th className="px-4 py-2 w-[100px]">GST %</th>
-                    <th className="px-4 py-2 w-[120px]">Location</th>
-                    <th className="px-4 py-2 w-[100px]">History</th>
+                    <td
+                      colSpan="14"
+                      className="px-4 py-6 text-center text-gray-500 italic"
+                    >
+                      No items found
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {filteredItems.map((it, index) => (
-                    <React.Fragment key={`${it.item}-${index}`}>
-                      <tr className="hover:bg-blue-50 transition duration-150">
-                        <td className="px-4 py-2 text-center">{index + 1}</td>
-                        <td className="px-4 py-2 font-semibold text-blue-700">{it.item}</td>
-                        <td className="px-4 py-2">{it.description || "-"}</td>
-                        <td className="px-4 py-2 text-center">{it.headQuantity}</td>
-                        <td className="px-4 py-2 text-center">{it.headQuantityMeasurement}</td>
-                        <td className="px-4 py-2 text-center">{it.subQuantity}</td>
-                        <td className="px-4 py-2 text-center">{it.subQuantityMeasurement}</td>
-                        <td className="px-4 py-2 text-center">{it.hsnCode}</td>
-                        <td className="px-4 py-2 text-right">{it.rate}</td>
-                        <td className="px-4 py-2 text-right">{it.amount}</td>
-                        <td className="px-4 py-2 text-center">{it.gstRate}</td>
-                        <td className="px-4 py-2 text-center">{it.location}</td>
-                        <td className="px-4 py-2 text-center">
-                          <button
-                            onClick={() => toggleHistory(it.item)}
-                            className="text-blue-600 hover:underline text-sm"
-                          >
-                            {expandedRow === it.item ? "Hide" : "View"}
-                          </button>
-                        </td>
-                      </tr>
-
-                      {expandedRow === it.item && (
-                        <tr>
-                          <td colSpan="13" className="px-6 py-4 bg-gray-50">
-                            <SupplierHistoryTable
-                              supplierHistory={
-                                historyData[it.item]?.supplierHistory || []
-                              }
-                            />
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                )}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

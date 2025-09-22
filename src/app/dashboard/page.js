@@ -62,6 +62,10 @@ export default function DashboardPage() {
     router.push(href);
   };
 
+  const filteredItems = items.filter(
+    (item) => !selectedCategory || item.hsnCode === selectedCategory
+  );
+
   return (
     <RequireAuth>
       <div className="flex h-screen overflow-hidden">
@@ -138,7 +142,7 @@ export default function DashboardPage() {
                   <div>
                     <p className="text-sm text-gray-500">Total Items</p>
                     <p className="text-xl font-bold text-gray-800">
-                      {totalItems}
+                      {filteredItems.length}
                     </p>
                   </div>
                 </div>
@@ -169,37 +173,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Action Tiles */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <button
-                  onClick={() => handleNavigation("/feed")}
-                  className="group block w-full text-left bg-white rounded-2xl shadow-md hover:shadow-xl border border-gray-200 p-8 transition-all duration-300"
-                >
-                  <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-green-100 text-green-600 group-hover:bg-green-600 group-hover:text-white transition">
-                    <PlusCircle size={28} />
-                  </div>
-                  <h3 className="mt-5 text-lg font-semibold text-gray-800">
-                    Feed Stock
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Add incoming materials to inventory.
-                  </p>
-                </button>
-
-                <button
-                  onClick={() => handleNavigation("/issue")}
-                  className="group block w-full text-left bg-white rounded-2xl shadow-md hover:shadow-xl border border-gray-200 p-8 transition-all duration-300"
-                >
-                  <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-red-100 text-red-600 group-hover:bg-red-600 group-hover:text-white transition">
-                    <MinusCircle size={28} />
-                  </div>
-                  <h3 className="mt-5 text-lg font-semibold text-gray-800">
-                    Issue Stock
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Record issued items with details.
-                  </p>
-                </button>
-
+              <div className="flex justify-center gap-6 flex-wrap">
                 <ExportForm />
               </div>
 
