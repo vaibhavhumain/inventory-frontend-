@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import API from "../../../utils/api";
+import Navbar from "../../../components/Navbar";
 export default function VendorsPage() {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,11 +21,17 @@ export default function VendorsPage() {
   }, []);
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold text-blue-700 mb-6 text-center">
-        Vendors
-      </h1>
-
+    <div className="min-h-screen bg-gray-50">
+          {/* ✅ Combined Navbar + Page Header */}
+          <div className="bg-white shadow sticky top-0 z-20">
+            <Navbar />
+            <div className="px-8 py-4 border-t border-gray-200 flex justify-center">
+              <h1 className="text-2xl font-bold text-blue-700">
+                Vendors
+              </h1>
+            </div>
+          </div>
+       
       {loading ? (
         <p className="text-center text-gray-500">Loading vendors...</p>
       ) : vendors.length === 0 ? (

@@ -45,22 +45,28 @@ export default function ItemsPage() {
     fetchItems();
   }, []);
 
-  const handleSearch = (query) => {
-    setHasSearched(true);
-    if (!query) {
-      setFilteredItems([]);
-      return;
-    }
-    const lower = query.toLowerCase();
-    const results = items.filter(
-      (it) =>
-        it.item?.toLowerCase().includes(lower) ||
-        it.description?.toLowerCase().includes(lower) ||
-        it.hsnCode?.toLowerCase().includes(lower) ||
-        it.notes?.toLowerCase().includes(lower)
-    );
-    setFilteredItems(results);
-  };
+ const handleSearch = (query) => {
+  setHasSearched(true);
+
+  if (!query) {
+    setFilteredItems([]);
+    return;
+  }
+
+  const lower = query.toLowerCase();
+
+  const results = items.filter((it) => {
+    const combined =
+      `${it.item} ${it.description} ${it.headQuantity} ${it.headQuantityMeasurement} 
+       ${it.subQuantity} ${it.subQuantityMeasurement} ${it.hsnCode} ${it.rate} 
+       ${it.amount} ${it.gstRate} ${it.partyName} ${it.date} ${it.location}`
+        .toLowerCase();
+
+    return combined.includes(lower);
+  });
+
+  setFilteredItems(results);
+};
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Navbar from "../../../components/Navbar";
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState([]);
@@ -23,81 +24,89 @@ export default function InvoicesPage() {
   }, []);
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      <h1 className="text-3xl font-bold text-blue-700 mb-6 text-center">
-        All Purchase Invoices
-      </h1>
+    <div className="min-h-screen bg-gray-50">
+      {/* ✅ Combined Navbar + Page Header */}
+      <div className="bg-white shadow sticky top-0 z-20">
+        <Navbar />
+        <div className="px-8 py-4 border-t border-gray-200 flex justify-center">
+          <h1 className="text-2xl font-bold text-blue-700">
+            All Purchase Invoices
+          </h1>
+        </div>
+      </div>
 
-      {loading ? (
-        <p className="text-center text-gray-500">Loading invoices...</p>
-      ) : invoices.length === 0 ? (
-        <p className="text-center text-gray-500">No invoices found.</p>
-      ) : (
-        <table className="w-full border-collapse border shadow bg-white">
-          <thead className="bg-gray-100">
-            <tr>
-              {[
-                "Invoice Number",
-                "Date",
-                "Vendor",
-                "Party Name",
-                "Taxable Value",
-                "GST",
-                "Total Value",
-                "Actions",
-              ].map((head) => (
-                <th
-                  key={head}
-                  className="border px-4 py-2 text-left font-semibold"
-                >
-                  {head}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {invoices.map((inv) => {
-              const gstTax =
-                (inv.totalInvoiceValue || 0) -
-                (inv.totalTaxableValue || 0) -
-                (inv.otherChargesAfterTax || 0) -
-                (inv.otherChargesBeforeTaxAmount || 0);
-
-              return (
-                <tr key={inv._id} className="hover:bg-gray-50">
-                  <td className="border px-4 py-2">{inv.invoiceNumber}</td>
-                  <td className="border px-4 py-2">
-                    {new Date(inv.date).toLocaleDateString()}
-                  </td>
-
-                  {/* ✅ Vendor details (code + name + GST) */}
-                  <td className="border px-4 py-2">
-                    {inv.vendor
-                      ? `${inv.vendor.code || ""} - ${inv.vendor.name || ""} (${inv.vendor.gstNumber || "No GST"})`
-                      : "N/A"}
-                  </td>
-
-                  <td className="border px-4 py-2">{inv.partyName}</td>
-                  <td className="border px-4 py-2 text-right">
-                    {inv.totalTaxableValue?.toFixed(2)}
-                  </td>
-                  <td className="border px-4 py-2 text-right">
-                    {gstTax.toFixed(2)}
-                  </td>
-                  <td className="border px-4 py-2 text-right font-semibold">
-                    {inv.totalInvoiceValue?.toFixed(2)}
-                  </td>
-                  <td className="border px-4 py-2 text-center">
-                    <button className="text-blue-600 hover:underline">
-                      View
-                    </button>
-                  </td>
+      {/* ✅ Main Content */}
+      <div className="p-8">
+        {loading ? (
+          <p className="text-center text-gray-500">Loading invoices...</p>
+        ) : invoices.length === 0 ? (
+          <p className="text-center text-gray-500">No invoices found.</p>
+        ) : (
+          <div className="overflow-x-auto bg-white shadow rounded-lg">
+            <table className="w-full border-collapse border">
+              <thead className="bg-gray-100">
+                <tr>
+                  {[
+                    "Invoice Number",
+                    "Date",
+                    "Vendor",
+                    "Party Name",
+                    "Taxable Value",
+                    "GST",
+                    "Total Value",
+                    "Actions",
+                  ].map((head) => (
+                    <th
+                      key={head}
+                      className="border px-4 py-2 text-left font-semibold"
+                    >
+                      {head}
+                    </th>
+                  ))}
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
+              </thead>
+              <tbody>
+                {invoices.map((inv) => {
+                  const gstTax =
+                    (inv.totalInvoiceValue || 0) -
+                    (inv.totalTaxableValue || 0) -
+                    (inv.otherChargesAfterTax || 0) -
+                    (inv.otherChargesBeforeTaxAmount || 0);
+
+                  return (
+                    <tr key={inv._id} className="hover:bg-gray-50">
+                      <td className="border px-4 py-2">{inv.invoiceNumber}</td>
+                      <td className="border px-4 py-2">
+                        {new Date(inv.date).toLocaleDateString()}
+                      </td>
+                      <td className="border px-4 py-2">
+                        {inv.vendor
+                          ? `${inv.vendor.code || ""} - ${inv.vendor.name || ""} (${inv.vendor.gstNumber || "No GST"})`
+                          : "N/A"}
+                      </td>
+                      <td className="border px-4 py-2">{inv.partyName}</td>
+                      <td className="border px-4 py-2 text-right">
+                        {inv.totalTaxableValue?.toFixed(2)}
+                      </td>
+                      <td className="border px-4 py-2 text-right">
+                        {gstTax.toFixed(2)}
+                      </td>
+                      <td className="border px-4 py-2 text-right font-semibold">
+                        {inv.totalInvoiceValue?.toFixed(2)}
+                      </td>
+                      <td className="border px-4 py-2 text-center">
+                        <button className="text-blue-600 hover:underline">
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
