@@ -16,7 +16,7 @@ export default function ItemsPage() {
       const res = await API.get("/purchase-invoices");
       const allItems = res.data.flatMap((inv) =>
         inv.items.map((it) => ({
-          item: it.item,
+          item: it.item?.name || it.item,
           description: it.description,
           headQuantity: it.headQuantity,
           headQuantityMeasurement: it.headQuantityMeasurement,

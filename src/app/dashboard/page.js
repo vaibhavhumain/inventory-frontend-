@@ -17,6 +17,7 @@ import {
   Users,
   FileText,
   LayoutDashboard,
+  Warehouse,
 } from "lucide-react";
 import API from "../../../utils/api";
 
@@ -94,10 +95,10 @@ export default function DashboardPage() {
               <FileText size={20} /> Invoices
             </button>
             <button
-              onClick={() => handleNavigation("/low-stock")}
+              onClick={() => handleNavigation("/stock")}
               className="flex items-center gap-3 px-4 py-2 w-full rounded-lg hover:bg-blue-600 transition"
             >
-              <AlertTriangle size={20} /> Low Stock
+              <Warehouse size={20} /> Stock
             </button>
           </nav>
           <div className="p-4 border-t border-blue-600">

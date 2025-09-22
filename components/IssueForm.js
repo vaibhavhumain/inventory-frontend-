@@ -11,6 +11,7 @@ export default function IssueForm({ type }) {
   const [allItems, setAllItems] = useState([]);
   const [message, setMessage] = useState("");
 
+  // 🔹 Fetch all items for dropdown
   useEffect(() => {
     const fetchItems = async () => {
       try {
@@ -22,6 +23,14 @@ export default function IssueForm({ type }) {
     };
     fetchItems();
   }, []);
+
+  // 🔹 Clear messages after 4s
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(""), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
 
   const handleItemChange = (index, field, value) => {
     const newItems = [...items];
@@ -41,6 +50,13 @@ export default function IssueForm({ type }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ✅ Validate items before sending
+    if (items.some((it) => !it.item || !it.quantity)) {
+      setMessage("❌ Please select an item and enter quantity.");
+      return;
+    }
+
     try {
       const { data } = await API.post("/issue-bills", {
         issueDate: new Date(),
@@ -51,11 +67,13 @@ export default function IssueForm({ type }) {
         items: items.map((it) => ({
           item: it.item,
           quantity: Number(it.quantity),
-          rate: Number(it.rate),
+          rate: it.rate ? Number(it.rate) : 0,
         })),
       });
 
       setMessage("✅ " + (data.message || "Issue Bill created successfully!"));
+
+      // Reset form
       setDepartment("");
       setIssuedBy("");
       setIssuedTo("");
@@ -112,6 +130,7 @@ export default function IssueForm({ type }) {
             />
           </div>
 
+          {/* Items Section */}
           <div>
             <h3 className="font-semibold text-gray-700 mb-2">Items</h3>
             {items.map((it, index) => (
@@ -121,14 +140,16 @@ export default function IssueForm({ type }) {
               >
                 <select
                   value={it.item}
-                  onChange={(e) => handleItemChange(index, "item", e.target.value)}
+                  onChange={(e) =>
+                    handleItemChange(index, "item", e.target.value)
+                  }
                   className="border p-2 rounded"
                   required
                 >
                   <option value="">Select Item</option>
                   {allItems.map((item) => (
                     <option key={item._id} value={item._id}>
-                      {item.code} - {item.description}
+                      {item.code} - {item.name || item.description}
                     </option>
                   ))}
                 </select>
@@ -137,17 +158,23 @@ export default function IssueForm({ type }) {
                   type="number"
                   placeholder="Quantity"
                   value={it.quantity}
-                  onChange={(e) => handleItemChange(index, "quantity", e.target.value)}
+                  onChange={(e) =>
+                    handleItemChange(index, "quantity", e.target.value)
+                  }
                   className="border p-2 rounded"
                   required
                 />
+
                 <input
                   type="number"
                   placeholder="Rate"
                   value={it.rate}
-                  onChange={(e) => handleItemChange(index, "rate", e.target.value)}
+                  onChange={(e) =>
+                    handleItemChange(index, "rate", e.target.value)
+                  }
                   className="border p-2 rounded"
                 />
+
                 {items.length > 1 && (
                   <button
                     type="button"

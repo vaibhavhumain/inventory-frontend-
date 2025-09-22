@@ -124,7 +124,7 @@ export default function CategoryItemsTable() {
                       >
                         <td className="px-4 py-2 text-center">{index + 1}</td>
                         <td className="px-4 py-2 font-semibold text-blue-700">
-                          {it.item}
+                         {it.item?.name} ({it.item?.code})
                         </td>
                         <td className="px-4 py-2">{it.description || "-"}</td>
                         <td className="px-4 py-2 text-center">
