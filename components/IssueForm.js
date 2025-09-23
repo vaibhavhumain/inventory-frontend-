@@ -6,7 +6,7 @@ import Navbar from "./Navbar";
 export default function IssueForm({ type }) {
   const [department, setDepartment] = useState("");
   const [issuedBy, setIssuedBy] = useState("");
-  const [issuedTo, setIssuedTo] = useState(""); // only for SUB_TO_USER
+  const [issuedTo, setIssuedTo] = useState(""); // for SUB_TO_USER and SUB_TO_SALE
   const [items, setItems] = useState([{ item: "", quantity: "", rate: "" }]);
   const [allItems, setAllItems] = useState([]);
   const [message, setMessage] = useState("");
@@ -63,7 +63,8 @@ export default function IssueForm({ type }) {
         department,
         issuedBy,
         type,
-        issuedTo: type === "SUB_TO_USER" ? issuedTo : undefined,
+        issuedTo:
+          type === "SUB_TO_USER" || type === "SUB_TO_SALE" ? issuedTo : undefined,
         items: items.map((it) => ({
           item: it.item,
           quantity: Number(it.quantity),
@@ -90,7 +91,11 @@ export default function IssueForm({ type }) {
       <Navbar />
       <div className="p-6 border rounded-lg max-w-2xl mx-auto mt-8 bg-white shadow">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">
-          {type === "MAIN_TO_SUB" ? "Issue Main → Sub" : "Issue Sub → User"}
+          {type === "MAIN_TO_SUB"
+            ? "Issue Main → Sub"
+            : type === "SUB_TO_USER"
+            ? "Issue Sub → User"
+            : "Issue Sub → Sale"}
         </h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -111,10 +116,12 @@ export default function IssueForm({ type }) {
               required
             />
 
-            {type === "SUB_TO_USER" && (
+            {(type === "SUB_TO_USER" || type === "SUB_TO_SALE") && (
               <input
                 type="text"
-                placeholder="Issued To (User)"
+                placeholder={
+                  type === "SUB_TO_USER" ? "Issued To (User)" : "Issued To (Customer)"
+                }
                 value={issuedTo}
                 onChange={(e) => setIssuedTo(e.target.value)}
                 className="border p-2 rounded"

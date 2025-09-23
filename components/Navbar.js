@@ -21,6 +21,7 @@ export default function Navbar() {
     router.push("/login");
   };
 
+  // ✅ Added "Sub → Sale" link
   const navLinks = [
     { href: "/dashboard", label: "Dashboard" },
     {
@@ -28,6 +29,7 @@ export default function Navbar() {
       children: [
         { href: "/issue-main-sub", label: "Main → Sub" },
         { href: "/issue-sub-user", label: "Sub → User" },
+        { href: "/issue-sub-sale", label: "Sub → Sale" }, 
       ],
     },
     { href: "/items", label: "Items" },
@@ -38,7 +40,6 @@ export default function Navbar() {
     <nav className="bg-white shadow-md border-b sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-
           {/* Nav Center */}
           <div className="flex-1 flex justify-center">
             <div className="hidden sm:flex items-center gap-8">
