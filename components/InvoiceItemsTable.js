@@ -1,7 +1,13 @@
 "use client";
 import React from "react";
 
-export default function InvoiceItemsTable({ items, setItems, allItems, unitOptions }) {
+export default function InvoiceItemsTable({
+  items,
+  setItems,
+  allItems,
+  unitOptions,
+  onAddNewItem, // 🔹 passed from parent (InvoiceFormPage)
+}) {
   const handleItemChange = (index, field, value) => {
     const newItems = [...items];
     newItems[index][field] = value;
@@ -37,7 +43,6 @@ export default function InvoiceItemsTable({ items, setItems, allItems, unitOptio
         amount: 0,
         gstAmount: 0,
         total: 0,
-        isNew: false,
       },
     ]);
   };
@@ -55,7 +60,7 @@ export default function InvoiceItemsTable({ items, setItems, allItems, unitOptio
           <tr>
             {[
               "Item",
-              "Description",
+              "Sub Description",
               "Head Qty",
               "UQC",
               "Sub Qty",
@@ -80,6 +85,7 @@ export default function InvoiceItemsTable({ items, setItems, allItems, unitOptio
         <tbody>
           {items.map((it, idx) => (
             <tr key={idx} className="hover:bg-gray-50">
+              {/* 🔹 Head Description Dropdown */}
               <td className="border px-2 py-1">
                 <select
                   className="w-full border rounded p-1"
@@ -88,43 +94,35 @@ export default function InvoiceItemsTable({ items, setItems, allItems, unitOptio
                     const value = e.target.value;
 
                     if (value === "__new__") {
-                      handleItemChange(idx, "isNew", true);
-                      handleItemChange(idx, "item", "");
-                    } else {
-                      handleItemChange(idx, "isNew", false);
-                      handleItemChange(idx, "item", value);
+                      if (onAddNewItem) onAddNewItem(idx);
+                      return;
+                    }
 
-                      const found = allItems.find((i) => i.code === value);
-                      if (found) {
-                        handleItemChange(idx, "description", found.description || "");
-                        handleItemChange(idx, "hsnCode", found.category || "");
-                        handleItemChange(idx, "subQuantityMeasurement", found.unit || "");
-                      }
+                    handleItemChange(idx, "item", value);
+
+                    const found = allItems.find(
+                      (i) => i._id === value || i.code === value
+                    );
+                    if (found) {
+                      handleItemChange(idx, "description", found.subDescription || "");
+                      handleItemChange(idx, "hsnCode", found.hsnCode || "");
+                      handleItemChange(idx, "subQuantityMeasurement", found.unit || "");
                     }
                   }}
                 >
                   <option value="">--Select Item--</option>
                   {allItems.map((i) => (
-                    <option key={i._id || i.code || idx} value={i.code}>
-                       {i.description}
+                    <option key={i._id || i.code} value={i._id || i.code}>
+                      {i.headDescription} {/* 🔹 Show Head Description */}
                     </option>
                   ))}
                   <option value="__new__" className="text-green-700 font-semibold">
                     ➕ Add New Item
                   </option>
                 </select>
-
-                {it.isNew && (
-                  <input
-                    type="text"
-                    placeholder="Enter new item code"
-                    className="mt-1 w-full border rounded p-1"
-                    value={it.item}
-                    onChange={(e) => handleItemChange(idx, "item", e.target.value)}
-                  />
-                )}
               </td>
 
+              {/* 🔹 Sub Description */}
               <td className="border px-2 py-1">
                 <input
                   className="w-full border rounded p-1"
@@ -134,6 +132,8 @@ export default function InvoiceItemsTable({ items, setItems, allItems, unitOptio
                   }
                 />
               </td>
+
+              {/* Head Quantity */}
               <td className="border px-2 py-1">
                 <input
                   type="number"
@@ -144,6 +144,8 @@ export default function InvoiceItemsTable({ items, setItems, allItems, unitOptio
                   }
                 />
               </td>
+
+              {/* Head UQC */}
               <td className="border px-2 py-1">
                 <select
                   className="w-full border rounded p-1"
@@ -160,6 +162,8 @@ export default function InvoiceItemsTable({ items, setItems, allItems, unitOptio
                   ))}
                 </select>
               </td>
+
+              {/* Sub Quantity */}
               <td className="border px-2 py-1">
                 <input
                   type="number"
@@ -170,16 +174,14 @@ export default function InvoiceItemsTable({ items, setItems, allItems, unitOptio
                   }
                 />
               </td>
+
+              {/* Sub UQC */}
               <td className="border px-2 py-1">
                 <select
                   className="w-full border rounded p-1"
                   value={it.subQuantityMeasurement}
                   onChange={(e) =>
-                    handleItemChange(
-                      idx,
-                      "subQuantityMeasurement",
-                      e.target.value
-                    )
+                    handleItemChange(idx, "subQuantityMeasurement", e.target.value)
                   }
                 >
                   <option value="">--Select--</option>
@@ -190,38 +192,58 @@ export default function InvoiceItemsTable({ items, setItems, allItems, unitOptio
                   ))}
                 </select>
               </td>
+
+              {/* HSN Code */}
               <td className="border px-2 py-1">
                 <input
                   className="w-full border rounded p-1"
                   value={it.hsnCode}
-                  onChange={(e) => handleItemChange(idx, "hsnCode", e.target.value)}
+                  onChange={(e) =>
+                    handleItemChange(idx, "hsnCode", e.target.value)
+                  }
                 />
               </td>
+
+              {/* Rate */}
               <td className="border px-2 py-1">
                 <input
                   type="number"
                   className="w-full border rounded p-1 text-right"
                   value={it.rate}
-                  onChange={(e) => handleItemChange(idx, "rate", e.target.value)}
+                  onChange={(e) =>
+                    handleItemChange(idx, "rate", e.target.value)
+                  }
                 />
               </td>
+
+              {/* Taxable */}
               <td className="border px-2 py-1 text-right">
                 {it.amount.toFixed(2)}
               </td>
+
+              {/* GST Rate */}
               <td className="border px-2 py-1">
                 <input
                   type="number"
                   className="w-full border rounded p-1 text-right"
                   value={it.gstRate}
-                  onChange={(e) => handleItemChange(idx, "gstRate", e.target.value)}
+                  onChange={(e) =>
+                    handleItemChange(idx, "gstRate", e.target.value)
+                  }
                 />
               </td>
+
+              {/* GST TAX */}
               <td className="border px-2 py-1 text-right">
                 {it.gstAmount.toFixed(2)}
               </td>
+
+              {/* TOTAL */}
               <td className="border px-2 py-1 text-right font-semibold">
                 {it.total.toFixed(2)}
               </td>
+
+              {/* Actions */}
               <td className="border px-2 py-1 text-center">
                 <button
                   type="button"

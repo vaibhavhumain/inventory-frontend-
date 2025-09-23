@@ -31,7 +31,6 @@ export default function VendorsPage() {
               </h1>
             </div>
           </div>
-       
       {loading ? (
         <p className="text-center text-gray-500">Loading vendors...</p>
       ) : vendors.length === 0 ? (

@@ -3,12 +3,13 @@ import { useState, useEffect } from "react";
 import Navbar from "../../../components/Navbar";
 import VendorModal from "../../../components/VendorModal";
 import InvoiceItemsTable from "../../../components/InvoiceItemsTable";
+import NewItemModal from "../../../components/NewItemModal";
 import API from "../../../utils/api";
 
 export default function InvoiceFormPage() {
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [partyName, setPartyName] = useState("");
-  const [vendorId, setVendorId] = useState(""); 
+  const [vendorId, setVendorId] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [remarks, setRemarks] = useState("");
   const [vendors, setVendors] = useState([]);
@@ -20,10 +21,14 @@ export default function InvoiceFormPage() {
   const [otherChargesAfterTax, setOtherChargesAfterTax] = useState(0);
 
   const [allItems, setAllItems] = useState([]);
+  const [showNewItemModal, setShowNewItemModal] = useState(false);
+
   const [items, setItems] = useState([
     {
       item: "",
       description: "",
+      headDescription: "",
+      subDescription: "",
       headQuantity: "",
       headQuantityMeasurement: "",
       subQuantity: "",
@@ -41,14 +46,15 @@ export default function InvoiceFormPage() {
     { value: "BAG", label: "Bag" },
     { value: "BDL", label: "Bundles" },
     { value: "BOX", label: "Boxes" },
-    { value: "FEET", label: "Feets" },
+    { value: "FEE", label: "Feets" },
     { value: "KG", label: "Kilogram" },
+    { value: "GRM", label: "Grams" },
     { value: "LTR", label: "Litre" },
     { value: "MTR", label: "Meter" },
     { value: "NOS", label: "Numbers" },
     { value: "PAC", label: "Packet" },
     { value: "PCS", label: "Pieces" },
-    { value: "ROLL", label: "Rolls" },
+    { value: "ROL", label: "Rolls" },
     { value: "SET", label: "Sets" },
     { value: "SQFT", label: "Square Feet" },
     { value: "SQM", label: "Square Meters" },
@@ -77,20 +83,8 @@ export default function InvoiceFormPage() {
   useEffect(() => {
     async function fetchItems() {
       try {
-        const res = await API.get("/purchase-invoices");
-        const data = res.data;
-        const allItemsFromInvoices = data.flatMap((inv) =>
-          inv.items.map((it) => ({
-            code:  typeof it.item === "object" ? it.item._id?.toString() : String(it.item),
-            description: it.description,
-            category: it.hsnCode,
-            unit: it.subQuantityMeasurement,
-          }))
-        );
-        const uniqueItems = Array.from(
-          new Map(allItemsFromInvoices.map((i) => [i.code, i])).values()
-        );
-        setAllItems(uniqueItems);
+        const res = await API.get("/items");
+        setAllItems(res.data);
       } catch (err) {
         console.error("Error fetching items:", err);
       }
@@ -135,6 +129,8 @@ export default function InvoiceFormPage() {
 
     const cleanItems = items.map(({ isNew, amount, gstAmount, total, ...rest }) => ({
       ...rest,
+      headDescription: rest.headDescription || rest.description || "",
+      subDescription: rest.subDescription || "",
       headQuantity: Number(rest.headQuantity) || 0,
       subQuantity: Number(rest.subQuantity) || 0,
       rate: Number(rest.rate) || 0,
@@ -144,7 +140,7 @@ export default function InvoiceFormPage() {
     const payload = {
       invoiceNumber,
       partyName,
-      vendor: vendorId, // ✅ always an ObjectId now
+      vendor: vendorId,
       date,
       remarks,
       items: cleanItems,
@@ -203,7 +199,7 @@ export default function InvoiceFormPage() {
                   <option value="">-- Select Vendor --</option>
                   {vendors.map((v) => (
                     <option key={v._id} value={v._id}>
-                      {v.name} ({v.code || "No GST"})
+                      {v.name}
                     </option>
                   ))}
                 </select>
@@ -221,8 +217,8 @@ export default function InvoiceFormPage() {
                   onClose={() => setShowVendorModal(false)}
                   onSave={(newVendor) => {
                     setVendors((prev) => [...prev, newVendor]);
-                    setVendorId(newVendor._id);   
-                    setPartyName( newVendor.name);
+                    setVendorId(newVendor._id);
+                    setPartyName(newVendor.name);
                   }}
                 />
               )}
@@ -244,7 +240,32 @@ export default function InvoiceFormPage() {
             setItems={setItems}
             allItems={allItems}
             unitOptions={unitOptions}
+            onAddNewItem={() => setShowNewItemModal(true)}
           />
+
+          {/* New Item Modal */}
+          {showNewItemModal && (
+            <NewItemModal
+              onClose={() => setShowNewItemModal(false)}
+              onSave={(newItem) => {
+                setAllItems((prev) => [...prev, newItem]);
+
+                setItems((prev) => {
+                  const updated = [...prev];
+                  updated[updated.length - 1] = {
+                    ...updated[updated.length - 1],
+                    item: newItem._id,
+                    description: newItem.headDescription,
+                    headDescription: newItem.headDescription,
+                    subDescription: newItem.subDescription || "",
+                    hsnCode: newItem.hsnCode || "",
+                    subQuantityMeasurement: newItem.unit || "",
+                  };
+                  return updated;
+                });
+              }}
+            />
+          )}
 
           {/* Summary */}
           <div className="border-t pt-4 mt-4 space-y-3 w-full">

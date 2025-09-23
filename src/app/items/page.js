@@ -146,7 +146,7 @@ export default function ItemsPage() {
                         {index + 1}
                       </td>
                       <td className="border px-3 py-2 font-medium text-blue-700">
-                        {it.item}
+                        {it.description}
                       </td>
                       <td className="border px-3 py-2">{it.description}</td>
                       <td className="border px-3 py-2 text-center">
