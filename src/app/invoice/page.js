@@ -81,7 +81,7 @@ export default function InvoiceFormPage() {
         const data = res.data;
         const allItemsFromInvoices = data.flatMap((inv) =>
           inv.items.map((it) => ({
-            code: it.item,
+            code:  typeof it.item === "object" ? it.item._id?.toString() : String(it.item),
             description: it.description,
             category: it.hsnCode,
             unit: it.subQuantityMeasurement,

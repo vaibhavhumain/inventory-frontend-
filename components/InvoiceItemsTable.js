@@ -105,8 +105,8 @@ export default function InvoiceItemsTable({ items, setItems, allItems, unitOptio
                 >
                   <option value="">--Select Item--</option>
                   {allItems.map((i) => (
-                    <option key={i.code} value={i.code}>
-                      {i.code} - {i.description}
+                    <option key={i._id || i.code || idx} value={i.code}>
+                       {i.description}
                     </option>
                   ))}
                   <option value="__new__" className="text-green-700 font-semibold">
