@@ -102,7 +102,6 @@ export default function CategoryItemsTable() {
                 <thead className="bg-gray-100 sticky top-0 z-10">
                   <tr>
                     <th className="px-4 py-3 w-[60px]">S.No</th>
-                    <th className="px-4 py-3 w-[100px]">Item</th>
                     <th className="px-4 py-3 w-[150px]">Description</th>
                     <th className="px-4 py-3 w-[100px]">Head Qty</th>
                     <th className="px-4 py-3 w-[100px]">Head UOM</th>
@@ -123,9 +122,6 @@ export default function CategoryItemsTable() {
                         className="hover:bg-blue-50 transition duration-150"
                       >
                         <td className="px-4 py-2 text-center">{index + 1}</td>
-                        <td className="px-4 py-2 font-semibold text-blue-700">
-                         {it.item?.name} ({it.item?.code})
-                        </td>
                         <td className="px-4 py-2">{it.description || "-"}</td>
                         <td className="px-4 py-2 text-center">
                           {it.headQuantity}
