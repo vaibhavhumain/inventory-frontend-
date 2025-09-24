@@ -77,12 +77,6 @@ export default function DashboardPage() {
           </div>
           <nav className="flex-1 p-4 space-y-2">
             <button
-              onClick={() => handleNavigation("/dashboard")}
-              className="flex items-center gap-3 px-4 py-2 w-full rounded-lg hover:bg-blue-600 transition"
-            >
-              <LayoutDashboard size={20} /> Dashboard
-            </button>
-            <button
               onClick={() => handleNavigation("/vendor")}
               className="flex items-center gap-3 px-4 py-2 w-full rounded-lg hover:bg-blue-600 transition"
             >
@@ -130,17 +124,7 @@ export default function DashboardPage() {
 
           <main className="flex-1 bg-gray-50 p-8 overflow-y-auto">
             <div className="max-w-7xl mx-auto space-y-10">
-              {/* Header */}
-              <div className="text-center">
-                <h1 className="text-3xl font-bold text-gray-800">
-                  📦 Inventory Dashboard
-                </h1>
-                <p className="text-gray-500 mt-2">
-                  Monitor inventory, manage stock, and export reports efficiently.
-                </p>
-              </div>
-
-              {/* Stats Overview */}
+              {/* Stats Oveview */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
                   <div className="p-3 rounded-lg bg-blue-100 text-blue-600">

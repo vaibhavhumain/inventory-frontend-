@@ -61,7 +61,6 @@ export default function ItemsPage() {
     const lower = query.toLowerCase();
 
     const results = items.filter((it) => {
-      // Combine ALL table fields into a string
       const combined = `
         ${it.code}
         ${it.headDescription}
@@ -89,7 +88,6 @@ export default function ItemsPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="max-w-[98%] mx-auto px-4 py-6">
-        <h1 className="text-xl font-bold text-gray-800 mb-4">📦 Item Ledger</h1>
 
         <div className="mb-6">
           <SearchBar onSearch={handleSearch} />

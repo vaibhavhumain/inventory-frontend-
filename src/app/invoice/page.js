@@ -166,9 +166,6 @@ export default function InvoiceFormPage() {
     <div>
       <Navbar />
       <div className="p-8 bg-gray-50 min-h-screen w-full">
-        <h1 className="text-3xl font-bold mb-6 text-center text-blue-700">
-          Create Purchase Invoice
-        </h1>
 
         <form onSubmit={handleSubmit} className="bg-white shadow-xl rounded-lg p-6 w-full">
           {/* Header */}
