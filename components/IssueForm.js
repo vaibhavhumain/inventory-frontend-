@@ -11,6 +11,12 @@ export default function IssueForm({ type }) {
   const [allItems, setAllItems] = useState([]);
   const [message, setMessage] = useState("");
 
+  // 🔹 Bus fields (only for SUB_TO_USER)
+  const [chassisNumber, setChassisNumber] = useState("");
+  const [engineNumber, setEngineNumber] = useState("");
+  const [model, setModel] = useState("");
+  const [remarks, setRemarks] = useState("");
+
   // 🔹 Fetch all items for dropdown
   useEffect(() => {
     const fetchItems = async () => {
@@ -58,7 +64,7 @@ export default function IssueForm({ type }) {
     }
 
     try {
-      const { data } = await API.post("/issue-bills", {
+      const payload = {
         issueDate: new Date(),
         department,
         issuedBy,
@@ -70,7 +76,14 @@ export default function IssueForm({ type }) {
           quantity: Number(it.quantity),
           rate: it.rate ? Number(it.rate) : 0,
         })),
-      });
+      };
+
+      // ✅ Add bus details only if issuing to a user
+      if (type === "SUB_TO_USER") {
+        payload.bus = { chassisNumber, engineNumber, model, remarks };
+      }
+
+      const { data } = await API.post("/issue-bills", payload);
 
       setMessage("✅ " + (data.message || "Issue Bill created successfully!"));
 
@@ -79,6 +92,10 @@ export default function IssueForm({ type }) {
       setIssuedBy("");
       setIssuedTo("");
       setItems([{ item: "", quantity: "", rate: "" }]);
+      setChassisNumber("");
+      setEngineNumber("");
+      setModel("");
+      setRemarks("");
     } catch (err) {
       setMessage(
         "❌ " + (err.response?.data?.error || "Error creating issue bill")
@@ -136,6 +153,42 @@ export default function IssueForm({ type }) {
               disabled
             />
           </div>
+
+          {/* 🔹 Bus Details Section */}
+          {type === "SUB_TO_USER" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                type="text"
+                placeholder="Chassis Number"
+                value={chassisNumber}
+                onChange={(e) => setChassisNumber(e.target.value)}
+                className="border p-2 rounded"
+                required
+              />
+              <input
+                type="text"
+                placeholder="Engine Number"
+                value={engineNumber}
+                onChange={(e) => setEngineNumber(e.target.value)}
+                className="border p-2 rounded"
+                required
+              />
+              <input
+                type="text"
+                placeholder="Bus Model"
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                className="border p-2 rounded col-span-2"
+              />
+              <input
+                type="text"
+                placeholder="Remarks"
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                className="border p-2 rounded col-span-2"
+              />
+            </div>
+          )}
 
           {/* Items Section */}
           <div>

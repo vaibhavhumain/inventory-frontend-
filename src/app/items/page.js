@@ -15,24 +15,29 @@ export default function ItemsPage() {
       setLoading(true);
       const res = await API.get("/purchase-invoices");
       const allItems = res.data.flatMap((inv) =>
-        inv.items.map((it) => ({
-          item: it.item?.name || it.item,
-          description: it.description,
-          headQuantity: it.headQuantity,
-          headQuantityMeasurement: it.headQuantityMeasurement,
-          subQuantity: it.subQuantity,
-          subQuantityMeasurement: it.subQuantityMeasurement,
-          hsnCode: it.hsnCode,
-          rate: it.rate,
-          amount: it.amount,
-          gstRate: it.gstRate,
-          notes: it.notes,
-          invoiceNumber: inv.invoiceNumber,
-          partyName: inv.partyName,
-          date: inv.date,
-          location: "Main Store",
-        }))
-      );
+  inv.items.map((it) => {
+    const itemDoc = it.item || {}; 
+    return {
+      code: itemDoc.code,
+      headDescription: itemDoc.headDescription || "",
+      subDescription: itemDoc.subDescription || it.overrideDescription || "",
+      unit: itemDoc.unit || it.subQuantityMeasurement || "",
+      hsnCode: it.hsnCode || itemDoc.hsnCode || "",
+      headQuantity: it.headQuantity,
+      headQuantityMeasurement: it.headQuantityMeasurement,
+      subQuantity: it.subQuantity,
+      subQuantityMeasurement: it.subQuantityMeasurement,
+      rate: it.rate,
+      amount: it.amount,
+      gstRate: it.gstRate,
+      notes: it.notes,
+      invoiceNumber: inv.invoiceNumber,
+      partyName: inv.partyName,
+      date: inv.date,
+      location: "Main Store",
+    };
+  })
+);
       setItems(allItems);
     } catch (error) {
       console.error("Error fetching items:", error);
@@ -93,10 +98,10 @@ export default function ItemsPage() {
                     S.No
                   </th>
                   <th className="border border-gray-300 px-3 py-2 text-left w-[120px]">
-                    Item
+                    Code
                   </th>
                   <th className="border border-gray-300 px-3 py-2 text-left w-[200px]">
-                    Description
+                     Description
                   </th>
                   <th className="border border-gray-300 px-3 py-2 text-center w-[100px]">
                     Head Qty
@@ -146,9 +151,9 @@ export default function ItemsPage() {
                         {index + 1}
                       </td>
                       <td className="border px-3 py-2 font-medium text-blue-700">
-                        {it.description}
+                        {it.code}
                       </td>
-                      <td className="border px-3 py-2">{it.description}</td>
+                      <td className="border px-3 py-2">{it.headDescription}</td>
                       <td className="border px-3 py-2 text-center">
                         {it.headQuantity}
                       </td>

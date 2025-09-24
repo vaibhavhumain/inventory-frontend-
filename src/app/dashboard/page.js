@@ -180,10 +180,7 @@ export default function DashboardPage() {
 
               {/* Table */}
               <div className="px-6 py-4">
-                <CategoryItemsTable
-                  items={items}
-                  selectedCategory={selectedCategory}
-                />
+                <CategoryItemsTable/>
               </div>
             </div>
           </main>
