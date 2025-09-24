@@ -1,10 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
 import Navbar from "../../../components/Navbar";
+import InvoiceDetailModal from "../../../components/InvoiceDetailModal";
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
 
   useEffect(() => {
     async function fetchInvoices() {
@@ -25,7 +27,7 @@ export default function InvoicesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ✅ Combined Navbar + Page Header */}
+      {/* ✅ Navbar + Page Header */}
       <div className="bg-white shadow sticky top-0 z-20">
         <Navbar />
         <div className="px-8 py-4 border-t border-gray-200 flex justify-center">
@@ -95,7 +97,10 @@ export default function InvoicesPage() {
                         {inv.totalInvoiceValue?.toFixed(2)}
                       </td>
                       <td className="border px-4 py-2 text-center">
-                        <button className="text-blue-600 hover:underline">
+                        <button
+                          onClick={() => setSelectedInvoice(inv)}
+                          className="text-blue-600 hover:underline"
+                        >
                           View
                         </button>
                       </td>
@@ -107,6 +112,14 @@ export default function InvoicesPage() {
           </div>
         )}
       </div>
+
+      {/* ✅ Invoice Detail Modal */}
+      {selectedInvoice && (
+        <InvoiceDetailModal
+          invoice={selectedInvoice}
+          onClose={() => setSelectedInvoice(null)}
+        />
+      )}
     </div>
   );
 }
