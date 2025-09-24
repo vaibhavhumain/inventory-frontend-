@@ -209,7 +209,7 @@ export default function IssueForm({ type }) {
                   <option value="">Select Item</option>
                   {allItems.map((item) => (
                     <option key={item._id} value={item._id}>
-                      {item.code} - {item.name || item.description}
+                      {item.code} - {item.headDescription}
                     </option>
                   ))}
                 </select>
