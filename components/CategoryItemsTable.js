@@ -80,6 +80,7 @@ export default function CategoryItemsTable() {
               ))}
             </select>
           </div>
+
           {/* Table */}
           {loading ? (
             <p className="text-center text-gray-500 py-4">Loading items...</p>
