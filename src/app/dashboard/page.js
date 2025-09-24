@@ -100,6 +100,12 @@ export default function DashboardPage() {
             >
               <Warehouse size={20} /> Stock
             </button>
+            <button
+              onClick={() => handleNavigation("/bus-consumption")}
+              className="flex items-center gap-3 px-4 py-2 w-full rounded-lg hover:bg-blue-600 transition" 
+            >
+              <Package size={20} /> Bus Consumption
+            </button>
           </nav>
           <div className="p-4 border-t border-blue-600">
             <button
