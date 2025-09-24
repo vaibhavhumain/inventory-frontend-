@@ -31,9 +31,7 @@ export default function InvoicesPage() {
       <div className="bg-white shadow sticky top-0 z-20">
         <Navbar />
         <div className="px-8 py-4 border-t border-gray-200 flex justify-center">
-          <h1 className="text-2xl font-bold text-blue-700">
-            All Purchase Invoices
-          </h1>
+
         </div>
       </div>
 

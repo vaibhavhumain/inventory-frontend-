@@ -25,9 +25,6 @@ export default function BusConsumptionHistoryPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="max-w-[95%] mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">
-          🚌 Bus Consumption History
-        </h1>
 
         {loading ? (
           <p className="text-center text-gray-500">Loading history...</p>

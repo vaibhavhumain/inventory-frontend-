@@ -75,10 +75,7 @@ export default function StockSummaryPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       <div className="max-w-[98%] mx-auto px-4 py-6">
-        <h1 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-          📊 Stock Summary
-        </h1>
-
+      
         <SearchBar
           onSearch={handleSearch}
           placeholder="Search item, vendor, code, HSN..."
