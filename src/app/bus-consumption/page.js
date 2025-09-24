@@ -43,7 +43,7 @@ export default function BusConsumptionHistoryPage() {
                   <th className="border px-3 py-2 w-[120px]">Issued By</th>
                   <th className="border px-3 py-2 w-[120px]">Issued To</th>
                   <th className="border px-3 py-2 w-[120px]">Issue Date</th>
-                  <th className="border px-3 py-2 w-[300px]">Items Consumed</th>
+                  <th className="border px-3 py-2 w-[320px]">Items Consumed</th>
                 </tr>
               </thead>
               <tbody>
@@ -77,24 +77,36 @@ export default function BusConsumptionHistoryPage() {
                             )
                           : "-"}
                       </td>
-                      <td className="border px-3 py-2 text-left align-top">
+                      <td className="border px-3 py-2 align-top">
                         {bus.issueBill?.items?.length > 0 ? (
-                          <ul className="list-disc list-inside space-y-1">
-                            {bus.issueBill.items.map((it, idx) => (
-                              <li
-                                key={idx}
-                                className="flex justify-between text-gray-700"
-                              >
-                                <span>
-                                  {it.item?.code || "-"}{" "}
-                                  {it.item?.headDescription || ""}
-                                </span>
-                                <span className="text-gray-500">
-                                  {it.quantity} {it.item?.unit || ""}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
+                          <table className="w-full text-xs border border-gray-300">
+                            <thead>
+                              <tr className="bg-blue-600 text-white">
+                                <th className="px-2 py-1 text-left border border-gray-300">
+                                  Item
+                                </th>       
+                                <th className="px-2 py-1 text-right border border-gray-300">
+                                  Quantity
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {bus.issueBill.items.map((it, idx) => (
+                                <tr
+                                  key={idx}
+                                  className="hover:bg-gray-50 transition"
+                                >
+                                  <td className="px-2 py-1 border border-gray-200">
+                                    {it.item?.code || "-"}{" "}
+                                    {it.item?.headDescription || ""}
+                                  </td>
+                                  <td className="px-2 py-1 border border-gray-200 text-right">
+                                    {it.quantity} {it.item?.unit || ""}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         ) : (
                           "-"
                         )}
