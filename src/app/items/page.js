@@ -10,7 +10,29 @@ export default function ItemsPage() {
   const [filteredItems, setFilteredItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [expandedRow, setExpandedRow] = useState(null); 
+  const [expandedRow, setExpandedRow] = useState(null);
+
+  // ✅ Sorting function
+  const sortByCode = (arr) => {
+    const regex = /^([A-Za-z]+)\/?(\d+)$/; // supports RM0001 or RM/0001
+    return arr.sort((a, b) => {
+      const matchA = a.code.match(regex);
+      const matchB = b.code.match(regex);
+
+      if (!matchA || !matchB) return a.code.localeCompare(b.code);
+
+      const prefixA = matchA[1];
+      const prefixB = matchB[1];
+      const numA = parseInt(matchA[2], 10);
+      const numB = parseInt(matchB[2], 10);
+
+      // First sort by prefix
+      if (prefixA !== prefixB) return prefixA.localeCompare(prefixB);
+
+      // Then sort numerically
+      return numA - numB;
+    });
+  };
 
   const fetchItems = async () => {
     try {
@@ -77,7 +99,8 @@ export default function ItemsPage() {
         }, {})
       );
 
-      setItems(grouped);
+      // ✅ Sort codes properly before setting
+      setItems(sortByCode(grouped));
     } catch (error) {
       console.error("Error fetching items:", error);
     } finally {
@@ -109,7 +132,7 @@ export default function ItemsPage() {
       return combined.includes(lower);
     });
 
-    setFilteredItems(results);
+    setFilteredItems(sortByCode(results));
   };
 
   const toggleExpand = (code) => {
@@ -175,7 +198,9 @@ export default function ItemsPage() {
                         <td className="border px-3 py-2 font-medium text-blue-700">
                           <Link href={`/items/${it.id}`}>{it.code}</Link>
                         </td>
-                        <td className="border px-3 py-2">{it.headDescription}</td>
+                        <td className="border px-3 py-2">
+                          {it.headDescription}
+                        </td>
                         <td className="border px-3 py-2 text-center">
                           {it.subQuantity}
                         </td>
