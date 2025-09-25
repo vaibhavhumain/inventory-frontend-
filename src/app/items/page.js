@@ -10,7 +10,7 @@ export default function ItemsPage() {
   const [filteredItems, setFilteredItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
-  const [expandedRow, setExpandedRow] = useState(null); // ✅ For dropdown expand/collapse
+  const [expandedRow, setExpandedRow] = useState(null); 
 
   const fetchItems = async () => {
     try {
@@ -44,7 +44,6 @@ export default function ItemsPage() {
         })
       );
 
-      // ✅ Group by code
       const grouped = Object.values(
         allItems.reduce((acc, it) => {
           if (!acc[it.code]) {
@@ -62,7 +61,6 @@ export default function ItemsPage() {
               ],
             };
           } else {
-            // add to invoices
             acc[it.code].invoices.push({
               invoiceNumber: it.invoiceNumber,
               partyName: it.partyName,
@@ -72,7 +70,6 @@ export default function ItemsPage() {
               subQuantity: it.subQuantity,
             });
 
-            // update totals
             acc[it.code].subQuantity += it.subQuantity;
             acc[it.code].amount += it.amount;
           }
