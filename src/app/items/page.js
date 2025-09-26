@@ -12,9 +12,8 @@ export default function ItemsPage() {
   const [hasSearched, setHasSearched] = useState(false);
   const [expandedRow, setExpandedRow] = useState(null);
 
-  // ✅ Sorting function
   const sortByCode = (arr) => {
-    const regex = /^([A-Za-z]+)\/?(\d+)$/; // supports RM0001 or RM/0001
+    const regex = /^([A-Za-z]+)\/?(\d+)$/; 
     return arr.sort((a, b) => {
       const matchA = a.code.match(regex);
       const matchB = b.code.match(regex);
@@ -26,10 +25,8 @@ export default function ItemsPage() {
       const numA = parseInt(matchA[2], 10);
       const numB = parseInt(matchB[2], 10);
 
-      // First sort by prefix
       if (prefixA !== prefixB) return prefixA.localeCompare(prefixB);
 
-      // Then sort numerically
       return numA - numB;
     });
   };
@@ -47,7 +44,7 @@ export default function ItemsPage() {
             code: itemDoc.code || "",
             headDescription: itemDoc.headDescription || "",
             subDescription:
-              itemDoc.subDescription || it.overrideDescription || "",
+            itemDoc.subDescription || it.overrideDescription || "",
             unit: itemDoc.unit || it.subQuantityMeasurement || "",
             hsnCode: it.hsnCode || itemDoc.hsnCode || "",
             headQuantity: it.headQuantity,
@@ -99,7 +96,6 @@ export default function ItemsPage() {
         }, {})
       );
 
-      // ✅ Sort codes properly before setting
       setItems(sortByCode(grouped));
     } catch (error) {
       console.error("Error fetching items:", error);
@@ -224,7 +220,6 @@ export default function ItemsPage() {
                         </td>
                       </tr>
 
-                      {/* Expandable Invoice Details */}
                       {expandedRow === it.code && (
                         <tr>
                           <td colSpan="9" className="bg-gray-50 p-3">
@@ -234,7 +229,7 @@ export default function ItemsPage() {
                                   <tr>
                                     <th className="border px-2 py-1">Invoice</th>
                                     <th className="border px-2 py-1">Party</th>
-                                    <th className="border px-2 py-1">Date</th>
+                                    <th className="border px-2 py-1">Date</th>  
                                     <th className="border px-2 py-1 text-right">
                                       Qty
                                     </th>
@@ -297,3 +292,4 @@ export default function ItemsPage() {
     </div>
   );
 }
+     

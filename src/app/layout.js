@@ -16,7 +16,7 @@ export const metadata = {
   description: "Manage stock feed and issue",
 };
 
-export default function RootLayout({ children }) {
+ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
