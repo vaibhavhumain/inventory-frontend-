@@ -41,13 +41,19 @@ export default function ItemLedgerTable({ itemId }) {
               <th className={thClass}>Opening (Main)</th>
               <th className={thClass}>Opening (Sub)</th>
               <th className={thClass}>Opening Total</th>
-              <th className={thClass}>Purchase</th>
-              <th className={thClass}>Issue</th>
-              <th className={thClass}>Consumption</th>
-              <th className={thClass}>Sale</th>
+              <th className={thClass}>Opening Amount</th>
+              <th className={thClass}>Purchase Qty</th>
+              <th className={thClass}>Purchase Amt</th>
+              <th className={thClass}>Issue Qty</th>
+              <th className={thClass}>Issue Amt</th>
+              <th className={thClass}>Consumption Qty</th>
+              <th className={thClass}>Consumption Amt</th>
+              <th className={thClass}>Sale Qty</th>
+              <th className={thClass}>Sale Amt</th>
               <th className={thClass}>Closing (Main)</th>
               <th className={thClass}>Closing (Sub)</th>
               <th className={thClass}>Closing Total</th>
+              <th className={thClass}>Closing Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -60,13 +66,19 @@ export default function ItemLedgerTable({ itemId }) {
                 <td className={tdClass}>{row.openingMain}</td>
                 <td className={tdClass}>{row.openingSub}</td>
                 <td className={tdClass}>{row.openingTotal}</td>
-                <td className={tdClass}>{row.purchase}</td>
-                <td className={tdClass}>{row.issue}</td>
-                <td className={tdClass}>{row.consumption}</td>
-                <td className={tdClass}>{row.sale}</td>
-                <td className={tdClass}>{row.balanceMain}</td>
-                <td className={tdClass}>{row.balanceSub}</td>
+                <td className={tdClass}>₹{row.openingAmount}</td>
+                <td className={tdClass}>{row.purchaseQty}</td>
+                <td className={tdClass}>₹{row.purchaseAmt}</td>
+                <td className={tdClass}>{row.issueQty}</td>
+                <td className={tdClass}>₹{row.issueAmt}</td>
+                <td className={tdClass}>{row.consumptionQty}</td>
+                <td className={tdClass}>₹{row.consumptionAmt}</td>
+                <td className={tdClass}>{row.saleQty}</td>
+                <td className={tdClass}>₹{row.saleAmt}</td>
+                <td className={tdClass}>{row.closingMain}</td>
+                <td className={tdClass}>{row.closingSub}</td>
                 <td className={tdClass}>{row.closingTotal}</td>
+                <td className={tdClass}>₹{row.closingAmount}</td>
               </tr>
             ))}
           </tbody>

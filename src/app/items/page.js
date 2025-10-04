@@ -13,7 +13,7 @@ export default function ItemsPage() {
   const [expandedRow, setExpandedRow] = useState(null);
 
   const sortByCode = (arr) => {
-    const regex = /^([A-Za-z]+)\/?(\d+)$/; 
+    const regex = /^([A-Za-z]+)\/?(\d+)$/;
     return arr.sort((a, b) => {
       const matchA = a.code.match(regex);
       const matchB = b.code.match(regex);
@@ -44,7 +44,7 @@ export default function ItemsPage() {
             code: itemDoc.code || "",
             headDescription: itemDoc.headDescription || "",
             subDescription:
-            itemDoc.subDescription || it.overrideDescription || "",
+              itemDoc.subDescription || it.overrideDescription || "",
             unit: itemDoc.unit || it.subQuantityMeasurement || "",
             hsnCode: it.hsnCode || itemDoc.hsnCode || "",
             headQuantity: it.headQuantity,
@@ -76,6 +76,7 @@ export default function ItemsPage() {
                   rate: it.rate,
                   amount: it.amount,
                   subQuantity: it.subQuantity,
+                  gstRate: it.gstRate,
                 },
               ],
             };
@@ -87,6 +88,7 @@ export default function ItemsPage() {
               rate: it.rate,
               amount: it.amount,
               subQuantity: it.subQuantity,
+              gstRate: it.gstRate,
             });
 
             acc[it.code].subQuantity += it.subQuantity;
@@ -123,7 +125,6 @@ export default function ItemsPage() {
         ${it.headDescription}
         ${it.subDescription}
         ${it.hsnCode}
-        ${it.partyName}
       `.toLowerCase();
       return combined.includes(lower);
     });
@@ -165,15 +166,6 @@ export default function ItemsPage() {
                   <th className="border px-3 py-2 text-right w-[100px]">
                     Amount
                   </th>
-                  <th className="border px-3 py-2 text-center w-[100px]">
-                    GST %
-                  </th>
-                  <th className="border px-3 py-2 text-center w-[120px]">
-                    Party
-                  </th>
-                  <th className="border px-3 py-2 text-center w-[120px]">
-                    Date
-                  </th>
                   <th className="border px-3 py-2 text-center w-[80px]">
                     More
                   </th>
@@ -203,15 +195,6 @@ export default function ItemsPage() {
                         <td className="border px-3 py-2 text-right">
                           ₹{it.amount}
                         </td>
-                        <td className="border px-3 py-2 text-center">
-                          {it.gstRate}
-                        </td>
-                        <td className="border px-3 py-2 text-center">
-                          {it.partyName}
-                        </td>
-                        <td className="border px-3 py-2 text-center">
-                          {new Date(it.date).toLocaleDateString("en-IN")}
-                        </td>
                         <td
                           className="border px-3 py-2 text-center cursor-pointer text-blue-600 underline"
                           onClick={() => toggleExpand(it.code)}
@@ -222,19 +205,22 @@ export default function ItemsPage() {
 
                       {expandedRow === it.code && (
                         <tr>
-                          <td colSpan="9" className="bg-gray-50 p-3">
+                          <td colSpan="6" className="bg-gray-50 p-3">
                             <div className="overflow-x-auto">
                               <table className="w-full text-xs border">
                                 <thead className="bg-gray-200">
                                   <tr>
                                     <th className="border px-2 py-1">Invoice</th>
                                     <th className="border px-2 py-1">Party</th>
-                                    <th className="border px-2 py-1">Date</th>  
+                                    <th className="border px-2 py-1">Date</th>
                                     <th className="border px-2 py-1 text-right">
                                       Qty
                                     </th>
                                     <th className="border px-2 py-1 text-right">
                                       Rate
+                                    </th>
+                                    <th className="border px-2 py-1 text-right">
+                                      GST %
                                     </th>
                                     <th className="border px-2 py-1 text-right">
                                       Amount
@@ -262,6 +248,9 @@ export default function ItemsPage() {
                                         ₹{inv.rate}
                                       </td>
                                       <td className="border px-2 py-1 text-right">
+                                        {inv.gstRate}%
+                                      </td>
+                                      <td className="border px-2 py-1 text-right">
                                         ₹{inv.amount}
                                       </td>
                                     </tr>
@@ -277,7 +266,7 @@ export default function ItemsPage() {
                 ) : (
                   <tr>
                     <td
-                      colSpan="9"
+                      colSpan="6"
                       className="px-4 py-6 text-center text-gray-500 italic"
                     >
                       No items found
@@ -292,4 +281,3 @@ export default function ItemsPage() {
     </div>
   );
 }
-     
