@@ -5,7 +5,7 @@ import VendorModal from "../../../components/VendorModal";
 import InvoiceItemsTable from "../../../components/InvoiceItemsTable";
 import NewItemModal from "../../../components/NewItemModal";
 import API from "../../../utils/api";
-
+import {toast} from "sonner";
 export default function InvoiceFormPage() {
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [partyName, setPartyName] = useState("");
@@ -118,49 +118,90 @@ export default function InvoiceFormPage() {
     );
   }, [items, beforeTaxAmount, beforeTaxPercent, beforeTaxGstRate, otherChargesAfterTax]);
 
-  // Save invoice
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!vendorId) {
-      alert("Please select a vendor before saving the invoice.");
-      return;
-    }
+  if (!vendorId) {
+    toast.error("Please select a vendor before saving the invoice.");
+    return;
+  }
 
-    const cleanItems = items.map(({ isNew, amount, gstAmount, total, ...rest }) => ({
-      ...rest,
-      headDescription: rest.headDescription || rest.description || "",
-      subDescription: rest.subDescription || "",
-      headQuantity: Number(rest.headQuantity) || 0,
-      subQuantity: Number(rest.subQuantity) || 0,
-      rate: Number(rest.rate) || 0,
-      gstRate: Number(rest.gstRate) || 0,
-    }));
+  const cleanItems = items.map(({ isNew, amount, gstAmount, total, ...rest }) => ({
+    ...rest,
+    headDescription: rest.headDescription || rest.description || "",
+    subDescription: rest.subDescription || "",
+    headQuantity: Number(rest.headQuantity) || 0,
+    subQuantity: Number(rest.subQuantity) || 0,
+    rate: Number(rest.rate) || 0,
+    gstRate: Number(rest.gstRate) || 0,
+  }));
 
-    const payload = {
-      invoiceNumber,
-      partyName,
-      vendor: vendorId,
-      date,
-      remarks,
-      items: cleanItems,
-      otherChargesBeforeTaxAmount: Number(beforeTaxAmount),
-      otherChargesBeforeTaxPercent: Number(beforeTaxPercent),
-      otherChargesBeforeTaxGstRate: Number(beforeTaxGstRate),
-      otherChargesAfterTax: Number(otherChargesAfterTax),
-    };
-
-    console.log("Submitting payload:", payload);
-
-    try {
-      const res = await API.post("/purchase-invoices", payload);
-      alert("Invoice saved successfully!");
-      console.log("Saved:", res.data);
-    } catch (err) {
-      console.error("Error saving invoice:", err.response?.data || err.message);
-      alert(`Save failed: ${err.response?.data?.error || err.message}`);
-    }
+  const payload = {
+    invoiceNumber,
+    partyName,
+    vendor: vendorId,
+    date,
+    remarks,
+    items: cleanItems,
+    otherChargesBeforeTaxAmount: Number(beforeTaxAmount),
+    otherChargesBeforeTaxPercent: Number(beforeTaxPercent),
+    otherChargesBeforeTaxGstRate: Number(beforeTaxGstRate),
+    otherChargesAfterTax: Number(otherChargesAfterTax),
   };
+
+  console.log("Submitting payload:", payload);
+
+  await toast.promise(
+    API.post("/purchase-invoices", payload),
+    {
+      loading: "Saving invoice...",
+      success: (res) => {
+        console.log("Saved:", res.data);
+        setTimeout(() => {
+          setInvoiceNumber("");
+          setPartyName("");
+          setVendorId("");
+          setRemarks("");
+          setBeforeTaxAmount(0);
+          setBeforeTaxPercent(0);
+          setBeforeTaxGstRate(0);
+          setOtherChargesAfterTax(0);
+          setItems([
+            {
+              item: "",
+              description: "",
+              headDescription: "",
+              subDescription: "",
+              headQuantity: "",
+              headQuantityMeasurement: "",
+              subQuantity: "",
+              subQuantityMeasurement: "",
+              hsnCode: "",
+              rate: "",
+              gstRate: "",
+              amount: 0,
+              gstAmount: 0,
+              total: 0,
+            },
+          ]);
+          setTotalTaxableValue(0);
+          setGstTotal(0);
+          setTotalInvoiceValue(0);
+          setBeforeTaxBase(0);
+          setBeforeTaxGst(0);
+        }, 1000);
+        return "Invoice saved successfully!";
+      },
+      error: (err) => {
+        console.error("Error saving invoice:", err.response?.data || err.message);
+        return err.response?.data?.error || "Save failed!";
+      },
+    },
+    { position: "top-right", duration: 4000 }
+  );
+};
+
+
 
   return (
     <div>

@@ -6,8 +6,9 @@ export default function InvoiceItemsTable({
   setItems,
   allItems,
   unitOptions,
-  onAddNewItem, // 🔹 passed from parent (InvoiceFormPage)
+  onAddNewItem,
 }) {
+  // 🧮 Handle field updates and total calculations
   const handleItemChange = (index, field, value) => {
     const newItems = [...items];
     newItems[index][field] = value;
@@ -27,12 +28,15 @@ export default function InvoiceItemsTable({
     setItems(newItems);
   };
 
+  // ➕ Add new row
   const addItem = () => {
     setItems([
       ...items,
       {
         item: "",
         description: "",
+        headDescription: "",
+        subDescription: "",
         headQuantity: "",
         headQuantityMeasurement: "",
         subQuantity: "",
@@ -47,6 +51,7 @@ export default function InvoiceItemsTable({
     ]);
   };
 
+  // ❌ Remove a row
   const removeItem = (index) => {
     const newItems = [...items];
     newItems.splice(index, 1);
@@ -82,10 +87,11 @@ export default function InvoiceItemsTable({
             ))}
           </tr>
         </thead>
+
         <tbody>
           {items.map((it, idx) => (
             <tr key={idx} className="hover:bg-gray-50">
-              {/* 🔹 Head Description Dropdown */}
+              {/* 🔹 Item Dropdown */}
               <td className="border px-2 py-1">
                 <select
                   className="w-full border rounded p-1"
@@ -98,25 +104,36 @@ export default function InvoiceItemsTable({
                       return;
                     }
 
-                    handleItemChange(idx, "item", value);
-
-                    const found = allItems.find(
+                    const selected = allItems.find(
                       (i) => i._id === value || i.code === value
                     );
-                    if (found) {
-                      handleItemChange(idx, "description", found.subDescription || "");
-                      handleItemChange(idx, "hsnCode", found.hsnCode || "");
-                      handleItemChange(idx, "subQuantityMeasurement", found.unit || "");
-                    }
+
+                    const newItems = [...items];
+                    newItems[idx] = {
+                      ...newItems[idx],
+                      item: value,
+                      description: selected?.subDescription || "",
+                      headDescription: selected?.headDescription || "",
+                      subDescription: selected?.subDescription || "",
+                      // ✅ auto-fill HSN only if backend provides it
+                      hsnCode: selected?.hsnCode || newItems[idx].hsnCode,
+                      headQuantityMeasurement: selected?.unit || "",
+                      subQuantityMeasurement: selected?.unit || "",
+                    };
+
+                    setItems(newItems);
                   }}
                 >
                   <option value="">--Select Item--</option>
                   {allItems.map((i) => (
                     <option key={i._id || i.code} value={i._id || i.code}>
-                      {i.headDescription} {/* 🔹 Show Head Description */}
+                      {i.headDescription}
                     </option>
                   ))}
-                  <option value="__new__" className="text-green-700 font-semibold">
+                  <option
+                    value="__new__"
+                    className="text-green-700 font-semibold"
+                  >
                     ➕ Add New Item
                   </option>
                 </select>
@@ -151,7 +168,11 @@ export default function InvoiceItemsTable({
                   className="w-full border rounded p-1"
                   value={it.headQuantityMeasurement}
                   onChange={(e) =>
-                    handleItemChange(idx, "headQuantityMeasurement", e.target.value)
+                    handleItemChange(
+                      idx,
+                      "headQuantityMeasurement",
+                      e.target.value
+                    )
                   }
                 >
                   <option value="">--Select--</option>
@@ -181,7 +202,11 @@ export default function InvoiceItemsTable({
                   className="w-full border rounded p-1"
                   value={it.subQuantityMeasurement}
                   onChange={(e) =>
-                    handleItemChange(idx, "subQuantityMeasurement", e.target.value)
+                    handleItemChange(
+                      idx,
+                      "subQuantityMeasurement",
+                      e.target.value
+                    )
                   }
                 >
                   <option value="">--Select--</option>
@@ -193,10 +218,11 @@ export default function InvoiceItemsTable({
                 </select>
               </td>
 
-              {/* HSN Code */}
+              {/* 🧾 HSN Code (editable but auto-filled if available) */}
               <td className="border px-2 py-1">
                 <input
-                  className="w-full border rounded p-1"
+                  className="w-full border rounded p-1 text-center"
+                  placeholder="Enter HSN"
                   value={it.hsnCode}
                   onChange={(e) =>
                     handleItemChange(idx, "hsnCode", e.target.value)
@@ -248,7 +274,7 @@ export default function InvoiceItemsTable({
                 <button
                   type="button"
                   onClick={() => removeItem(idx)}
-                  className="text-red-600 font-bold"
+                  className="text-red-600 font-bold hover:text-red-800"
                 >
                   ✕
                 </button>

@@ -70,7 +70,7 @@ export default function ItemLedgerTable({ itemId }) {
                 <td className={tdClass}>{row.purchaseQty}</td>
                 <td className={tdClass}>₹{row.purchaseAmt}</td>
                 <td className={tdClass}>{row.issueQty}</td>
-                <td className={tdClass}>₹{row.issueAmt}</td>
+                <td className={tdClass}>₹{row.issueAmt?.toFixed(2)}</td>
                 <td className={tdClass}>{row.consumptionQty}</td>
                 <td className={tdClass}>₹{row.consumptionAmt}</td>
                 <td className={tdClass}>{row.saleQty}</td>

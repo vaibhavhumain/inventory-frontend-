@@ -43,28 +43,32 @@ export default function BusConsumptionHistoryPage() {
               </thead>
               <tbody>
                 {history.length > 0 ? (
-                  history.map((bus, index) => (
-                    <tr
-                      key={bus._id}
-                      onClick={() => router.push(`/bus-consumption/${bus._id}`)} 
-                      className={`cursor-pointer ${
-                        index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                      } hover:bg-blue-100 transition`}
-                    >
-                      <td className="border px-3 py-2 font-medium text-blue-700 text-center">
-                        {bus.busCode}
-                      </td>
-                      <td className="border px-3 py-2 text-center">
-                        {bus.chassisNumber}
-                      </td>
-                      <td className="border px-3 py-2 text-center">
-                        {bus.engineNumber}
-                      </td>
-                      <td className="border px-3 py-2 text-center">
-                        {bus.issueBill?.issuedTo || "-"}
-                      </td>
-                    </tr>
-                  ))
+                  history.map((bus, index) => {
+                    // ✅ show first issueBill (or "-" if none)
+                    const firstIssue = bus.issueBills?.[0] || {};
+                    return (
+                      <tr
+                        key={bus._id}
+                        onClick={() => router.push(`/bus-consumption/${bus._id}`)} 
+                        className={`cursor-pointer ${
+                          index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                        } hover:bg-blue-100 transition`}
+                      >
+                        <td className="border px-3 py-2 font-medium text-blue-700 text-center">
+                          {bus.busCode}
+                        </td>
+                        <td className="border px-3 py-2 text-center">
+                          {bus.chassisNumber}
+                        </td>
+                        <td className="border px-3 py-2 text-center">
+                          {bus.engineNumber}
+                        </td>
+                        <td className="border px-3 py-2 text-center">
+                          {firstIssue.issuedTo || "-"}
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td
