@@ -53,7 +53,7 @@ export default function ItemsPage() {
             subQuantityMeasurement: it.subQuantityMeasurement,
             rate: it.rate,
             amount: it.amount,
-            gstRate: it.gstRate,
+            gstRate: it.item?.gstRate || it.gstRate || 0,
             notes: it.notes,
             invoiceNumber: inv.invoiceNumber,
             partyName: inv.partyName,
@@ -76,7 +76,8 @@ export default function ItemsPage() {
                   rate: it.rate,
                   amount: it.amount,
                   subQuantity: it.subQuantity,
-                  gstRate: it.gstRate,
+                  gstRate: it.item?.gstRate || it.gstRate || 0,
+
                 },
               ],
             };
@@ -88,7 +89,8 @@ export default function ItemsPage() {
               rate: it.rate,
               amount: it.amount,
               subQuantity: it.subQuantity,
-              gstRate: it.gstRate,
+              gstRate: it.item?.gstRate || it.gstRate || 0,
+
             });
 
             acc[it.code].subQuantity += it.subQuantity;
