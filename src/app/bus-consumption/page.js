@@ -34,10 +34,8 @@ export default function BusConsumptionHistoryPage() {
           <div className="bg-white rounded-lg shadow border border-gray-300 overflow-x-auto">
             <table className="w-full text-sm border-collapse table-fixed">
               <thead>
-                <tr className="bg-blue-700 text-white text-xs uppercase">
+                <tr className="bg-green-700 text-white text-xs uppercase">
                   <th className="border px-3 py-2 w-[120px]">Bus Code</th>
-                  <th className="border px-3 py-2 w-[140px]">Chassis No</th>
-                  <th className="border px-3 py-2 w-[140px]">Engine No</th>
                   <th className="border px-3 py-2 w-[140px]">Issued To</th>
                 </tr>
               </thead>
@@ -54,14 +52,8 @@ export default function BusConsumptionHistoryPage() {
                           index % 2 === 0 ? "bg-white" : "bg-gray-50"
                         } hover:bg-blue-100 transition`}
                       >
-                        <td className="border px-3 py-2 font-medium text-blue-700 text-center">
+                        <td className="border px-3 py-2 font-medium text-gray-700 text-center">
                           {bus.busCode}
-                        </td>
-                        <td className="border px-3 py-2 text-center">
-                          {bus.chassisNumber}
-                        </td>
-                        <td className="border px-3 py-2 text-center">
-                          {bus.engineNumber}
                         </td>
                         <td className="border px-3 py-2 text-center">
                           {firstIssue.issuedTo || "-"}

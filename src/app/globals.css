@@ -25,3 +25,41 @@
   animation: gradientShift 12s ease infinite;
 }
 
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-slideIn {
+  animation: slideIn 0.25s ease-out both;
+}
+
+@keyframes spin-glow {
+  0% { transform: rotate(0deg); box-shadow: 0 0 10px rgba(0,255,180,0.3); }
+  50% { transform: rotate(180deg); box-shadow: 0 0 25px rgba(0,255,180,0.7); }
+  100% { transform: rotate(360deg); box-shadow: 0 0 10px rgba(0,255,180,0.3); }
+}
+.animate-spin-glow {
+  animation: spin-glow 1.5s linear infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.05); }
+}
+.animate-pulse-glow {
+  animation: pulse-glow 5s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.8s ease-in;
+}

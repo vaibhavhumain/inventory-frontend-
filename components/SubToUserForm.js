@@ -11,22 +11,59 @@ export default function SubToUserForm() {
   const [userName, setUserName] = useState("");
   const [message, setMessage] = useState("");
 
-  // Fetch items and current logged-in user
+  // 🔹 Fetch items with stock + logged-in user
   useEffect(() => {
-    API.get("/items").then((res) => setAllItems(res.data));
-    API.get("/auth/profile").then((res) => setUserName(res.data.name));
+    const fetchData = async () => {
+      try {
+        const [itemsRes, summaryRes, userRes] = await Promise.all([
+          API.get("/items"),
+          API.get("/stock/summary"),
+          API.get("/auth/profile"),
+        ]);
+
+        // merge stock summary into items
+        const itemsWithStock = itemsRes.data.map((item) => {
+          const stockRecords = summaryRes.data.filter(
+            (s) => String(s.itemId) === String(item._id)
+          );
+          const latestRecord =
+            stockRecords.length > 0
+              ? stockRecords.reduce((a, b) =>
+                  new Date(a.date) > new Date(b.date) ? a : b
+                )
+              : null;
+
+          return {
+            ...item,
+            mainStoreQty: latestRecord?.closingMain || 0,
+            subStoreQty: latestRecord?.closingSub || 0,
+            closingQty: latestRecord?.closingTotal || 0,
+          };
+        });
+
+        setAllItems(itemsWithStock);
+        setUserName(userRes.data.name);
+      } catch (err) {
+        console.error("Error loading items or user:", err);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  // Row handlers
+  // Row Handlers
   const handleItemChange = (index, field, value) => {
-    const newItems = [...items];
-    newItems[index][field] = value;
-    setItems(newItems);
+    const updated = [...items];
+    updated[index][field] = value;
+    setItems(updated);
   };
-  const addRow = () => setItems([...items, { item: "", quantity: "", rate: "" }]);
+
+  const addRow = () =>
+    setItems([...items, { item: "", quantity: "", rate: "" }]);
+
   const removeRow = (i) => setItems(items.filter((_, idx) => idx !== i));
 
-  // Submit form
+  // Submit Form
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -53,7 +90,6 @@ export default function SubToUserForm() {
     };
 
     try {
-      console.log("Payload being sent:", payload);
       const { data } = await API.post("/issue-bills", payload);
       setMessage("✅ " + (data.message || "Issued successfully!"));
       setBusCode("");
@@ -103,6 +139,7 @@ export default function SubToUserForm() {
                   <th className="border px-3 py-2 text-center">Sr No</th>
                   <th className="border px-3 py-2 text-left">Bus Code</th>
                   <th className="border px-3 py-2 text-left">Item Name</th>
+                  <th className="border px-3 py-2 text-center">Available</th>
                   <th className="border px-3 py-2 text-center">Qty</th>
                   <th className="border px-3 py-2 text-center">Unit</th>
                   <th className="border px-3 py-2 text-center">Rate</th>
@@ -115,10 +152,15 @@ export default function SubToUserForm() {
                 {items.map((it, idx) => {
                   const selected = allItems.find((a) => a._id === it.item);
                   const amount =
-                    it.quantity && it.rate ? (it.quantity * it.rate).toFixed(2) : "";
+                    it.quantity && it.rate
+                      ? (it.quantity * it.rate).toFixed(2)
+                      : "";
+
                   return (
                     <tr key={idx} className="text-gray-800">
                       <td className="border px-3 py-1 text-center">{idx + 1}</td>
+
+                      {/* Bus Code */}
                       <td className="border px-3 py-1">
                         <input
                           type="text"
@@ -129,6 +171,8 @@ export default function SubToUserForm() {
                           required
                         />
                       </td>
+
+                      {/* Item Dropdown */}
                       <td className="border px-3 py-1">
                         <select
                           value={it.item}
@@ -146,6 +190,11 @@ export default function SubToUserForm() {
                           ))}
                         </select>
                       </td>
+                      <td className="border px-3 py-1 text-center text-green-600 font-semibold">
+                        {selected ? `${selected.subStoreQty} ${selected.unit || "pcs"}` : "-"}
+                      </td>
+z
+                      {/* Quantity */}
                       <td className="border px-3 py-1 text-center">
                         <input
                           type="number"
@@ -157,9 +206,12 @@ export default function SubToUserForm() {
                           required
                         />
                       </td>
+
+                      {/* Unit */}
                       <td className="border px-3 py-1 text-center text-gray-600">
                         {selected?.unit || "-"}
                       </td>
+                      {/* Rate */}
                       <td className="border px-3 py-1 text-center">
                         <input
                           type="number"
@@ -170,9 +222,13 @@ export default function SubToUserForm() {
                           className="w-24 border-none text-center focus:ring-0 focus:outline-none"
                         />
                       </td>
+
+                      {/* Amount */}
                       <td className="border px-3 py-1 text-center font-medium text-green-700">
                         {amount}
                       </td>
+
+                      {/* Action */}
                       <td className="border px-3 py-1 text-center">
                         {items.length > 1 && (
                           <button
@@ -191,6 +247,7 @@ export default function SubToUserForm() {
             </table>
           </div>
 
+          {/* Add Row */}
           <div className="mt-3">
             <button
               type="button"
@@ -201,6 +258,7 @@ export default function SubToUserForm() {
             </button>
           </div>
 
+          {/* Footer */}
           <div className="flex justify-between items-center mt-6">
             <p className="text-gray-700">
               Issued By: <strong>{userName || "Fetching..."}</strong>

@@ -7,6 +7,7 @@ import NewItemModal from "../../../components/NewItemModal";
 import API from "../../../utils/api";
 import { frontendLog } from "../../../utils/logger"; 
 import {toast} from "sonner";
+import { Link } from "lucide-react"; 
 export default function InvoiceFormPage() {
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [partyName, setPartyName] = useState("");
@@ -44,21 +45,21 @@ export default function InvoiceFormPage() {
   ]);
 
   const unitOptions = [
-    { value: "BAG", label: "Bag" },
-    { value: "BDL", label: "Bundles" },
-    { value: "BOX", label: "Boxes" },
-    { value: "FEE", label: "Feets" },
-    { value: "KG", label: "Kilogram" },
-    { value: "GRM", label: "Grams" },
-    { value: "LTR", label: "Litre" },
-    { value: "MTR", label: "Meter" },
-    { value: "NOS", label: "Numbers" },
-    { value: "PAC", label: "Packet" },
-    { value: "PCS", label: "Pieces" },
-    { value: "ROL", label: "Rolls" },
-    { value: "SET", label: "Sets" },
-    { value: "SQFT", label: "Square Feet" },
-    { value: "SQM", label: "Square Meters" },
+    { value: "BAG", label: "BAG" },
+    { value: "BDL", label: "BDL" },
+    { value: "BOX", label: "BOX" },
+    { value: "FEE", label: "FEE" },
+    { value: "KG", label: "KG" },
+    { value: "GRM", label: "GRM" },
+    { value: "LTR", label: "LTR" },
+    { value: "MTR", label: "MTR" },
+    { value: "NOS", label: "NOS" },
+    { value: "PAC", label: "PAC" },
+    { value: "PCS", label: "PCS" },
+    { value: "ROL", label: "ROL" },
+    { value: "SET", label: "SET" },
+    { value: "SQFT", label: "SQFT" },
+    { value: "SQM", label: "SQM" },
   ];
 
   const [totalTaxableValue, setTotalTaxableValue] = useState(0);

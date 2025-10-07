@@ -27,7 +27,6 @@ export default function InvoicesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ✅ Navbar + Page Header */}
       <div className="bg-white shadow sticky top-0 z-20">
         <Navbar />
         <div className="px-8 py-4 border-t border-gray-200 flex justify-center">
@@ -72,7 +71,7 @@ export default function InvoicesPage() {
                     (inv.totalTaxableValue || 0) -
                     (inv.otherChargesAfterTax || 0) -
                     (inv.otherChargesBeforeTaxAmount || 0);
-
+           
                   return (
                     <tr key={inv._id} className="hover:bg-gray-50">
                       <td className="border px-4 py-2">{inv.invoiceNumber}</td>
@@ -91,7 +90,7 @@ export default function InvoicesPage() {
                       <td className="border px-4 py-2 text-right">
                         {gstTax.toFixed(2)}
                       </td>
-                      <td className="border px-4 py-2 text-right font-semibold">
+                         <td className="border px-4 py-2 text-right font-semibold">
                         {inv.totalInvoiceValue?.toFixed(2)}
                       </td>
                       <td className="border px-4 py-2 text-center">

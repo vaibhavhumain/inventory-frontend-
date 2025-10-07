@@ -73,7 +73,7 @@ export default function DashboardPage() {
         {/* Sidebar */}
         <aside className="w-64 bg-gradient-to-b from-blue-700 to-blue-900 text-white flex flex-col">
           <div className="p-6 text-2xl font-bold border-b border-blue-600">
-            InveTrack
+            In Detail        
           </div>
           <nav className="flex-1 p-4 space-y-2">
             <button
@@ -99,6 +99,12 @@ export default function DashboardPage() {
               className="flex items-center gap-3 px-4 py-2 w-full rounded-lg hover:bg-blue-600 transition" 
             >
               <Package size={20} /> Bus Consumption
+            </button>
+            <button 
+              onClick={() => handleNavigation("/issue-bills")}
+              className="flex items-center gap-3 px-4 py-2 w-full rounded-lg hover:bg-blue-600 transition"
+            >
+              <FileSpreadsheet size={20} /> Issue Bills
             </button>
           </nav>
           <div className="p-4 border-t border-blue-600">
