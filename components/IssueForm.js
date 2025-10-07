@@ -5,11 +5,11 @@ import Navbar from "./Navbar";
 
 export default function IssueForm({ type }) {
   const [department, setDepartment] = useState("");
-  const [issuedBy, setIssuedBy] = useState("");
   const [issuedTo, setIssuedTo] = useState(""); // for SUB_TO_USER and SUB_TO_SALE
   const [items, setItems] = useState([{ item: "", quantity: "", rate: "" }]);
   const [allItems, setAllItems] = useState([]);
   const [message, setMessage] = useState("");
+  const [userName, setUserName] = useState(""); // 🟢 auto-fetched user name
 
   // 🔹 Bus fields (only for SUB_TO_USER)
   const [chassisNumber, setChassisNumber] = useState("");
@@ -17,17 +17,30 @@ export default function IssueForm({ type }) {
   const [model, setModel] = useState("");
   const [remarks, setRemarks] = useState("");
 
-  // 🔹 Fetch all items for dropdown
   useEffect(() => {
     const fetchItems = async () => {
       try {
         const { data } = await API.get("/items");
         setAllItems(data);
+
       } catch (err) {
         console.error("Error fetching items:", err);
       }
     };
     fetchItems();
+  }, []);
+
+  // 🔹 Fetch current logged-in user (to show Issued By)
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const { data } = await API.get("/auth/profile"); // backend should return logged-in user
+        setUserName(data.name);
+      } catch (err) {
+        console.error("Error fetching user info:", err);
+      }
+    };
+    fetchUser();
   }, []);
 
   // 🔹 Clear messages after 4s
@@ -57,7 +70,6 @@ export default function IssueForm({ type }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ Validate items before sending
     if (items.some((it) => !it.item || !it.quantity)) {
       setMessage("❌ Please select an item and enter quantity.");
       return;
@@ -67,7 +79,6 @@ export default function IssueForm({ type }) {
       const payload = {
         issueDate: new Date(),
         department,
-        issuedBy,
         type,
         issuedTo:
           type === "SUB_TO_USER" || type === "SUB_TO_SALE" ? issuedTo : undefined,
@@ -78,7 +89,6 @@ export default function IssueForm({ type }) {
         })),
       };
 
-      // ✅ Add bus details only if issuing to a user
       if (type === "SUB_TO_USER") {
         payload.bus = { chassisNumber, engineNumber, model, remarks };
       }
@@ -89,7 +99,6 @@ export default function IssueForm({ type }) {
 
       // Reset form
       setDepartment("");
-      setIssuedBy("");
       setIssuedTo("");
       setItems([{ item: "", quantity: "", rate: "" }]);
       setChassisNumber("");
@@ -97,9 +106,7 @@ export default function IssueForm({ type }) {
       setModel("");
       setRemarks("");
     } catch (err) {
-      setMessage(
-        "❌ " + (err.response?.data?.error || "Error creating issue bill")
-      );
+      setMessage("❌ " + (err.response?.data?.error || "Error creating issue bill"));
     }
   };
 
@@ -114,6 +121,7 @@ export default function IssueForm({ type }) {
             ? "Issue Sub → User"
             : "Issue Sub → Sale"}
         </h2>
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
@@ -124,20 +132,19 @@ export default function IssueForm({ type }) {
               className="border p-2 rounded"
               required
             />
-            <input
-              type="text"
-              placeholder="Issued By"
-              value={issuedBy}
-              onChange={(e) => setIssuedBy(e.target.value)}
-              className="border p-2 rounded"
-              required
-            />
+
+            {/* 🟢 Issued By - Auto-filled (non-editable) */}
+            <div className="border p-2 rounded bg-gray-100 text-gray-700">
+              <strong>{userName ? userName : "Fetching user..."}</strong>
+            </div>
 
             {(type === "SUB_TO_USER" || type === "SUB_TO_SALE") && (
               <input
                 type="text"
                 placeholder={
-                  type === "SUB_TO_USER" ? "Issued To (User)" : "Issued To (Customer)"
+                  type === "SUB_TO_USER"
+                    ? "Issued To (User)"
+                    : "Issued To (Customer)"
                 }
                 value={issuedTo}
                 onChange={(e) => setIssuedTo(e.target.value)}
@@ -193,59 +200,77 @@ export default function IssueForm({ type }) {
           {/* Items Section */}
           <div>
             <h3 className="font-semibold text-gray-700 mb-2">Items</h3>
-            {items.map((it, index) => (
-              <div
-                key={index}
-                className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3"
-              >
-                <select
-                  value={it.item}
-                  onChange={(e) =>
-                    handleItemChange(index, "item", e.target.value)
-                  }
-                  className="border p-2 rounded"
-                  required
-                >
-                  <option value="">Select Item</option>
-                  {allItems.map((item) => (
-                    <option key={item._id} value={item._id}>
-                      {item.code} - {item.headDescription}
-                    </option>
-                  ))}
-                </select>
+            {items.map((it, index) => {
+  const selectedItem = allItems.find((i) => i._id === it.item);
 
-                <input
-                  type="number"
-                  placeholder="Quantity"
-                  value={it.quantity}
-                  onChange={(e) =>
-                    handleItemChange(index, "quantity", e.target.value)
-                  }
-                  className="border p-2 rounded"
-                  required
-                />
+  return (
+    <div
+      key={index}
+      className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3 border-b pb-3"
+    >
+      <div>
+        <select
+          value={it.item}
+          onChange={(e) => handleItemChange(index, "item", e.target.value)}
+          className="border p-2 rounded w-full"
+          required
+        >
+          <option value="">Select Item</option>
+          {allItems.map((item) => (
+            <option key={item._id} value={item._id}>
+              {item.code} - {item.headDescription} - {item.mainStoreQty} in Main, {item.subStoreQty} in Sub 
+            </option>
+          ))}
+        </select>
 
-                <input
-                  type="number"
-                  placeholder="Rate"
-                  value={it.rate}
-                  onChange={(e) =>
-                    handleItemChange(index, "rate", e.target.value)
-                  }
-                  className="border p-2 rounded"
-                />
+        {/* 🟢 Show available stock when item selected */}
+        {selectedItem && (
+  <p className="text-sm text-gray-600 mt-1">
+    Available:&nbsp;
+    <span className="font-medium text-green-600">
+      {type === "MAIN_TO_SUB"
+        ? selectedItem.mainStoreQty
+        : type === "SUB_TO_USER"
+        ? selectedItem.subStoreQty
+        : selectedItem.closingQty}{" "}
+      {selectedItem.unit || ""}
+    </span>{" "}
+    in stock
+  </p>
+)}
 
-                {items.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeItemRow(index)}
-                    className="text-red-600 hover:underline text-sm md:col-span-3 text-left"
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-            ))}
+      </div>
+
+      <input
+        type="number"
+        placeholder="Quantity"
+        value={it.quantity}
+        onChange={(e) => handleItemChange(index, "quantity", e.target.value)}
+        className="border p-2 rounded"
+        required
+      />
+
+      <input
+        type="number"
+        placeholder="Rate"
+        value={it.rate}
+        onChange={(e) => handleItemChange(index, "rate", e.target.value)}
+        className="border p-2 rounded"
+      />
+
+      {items.length > 1 && (
+        <button
+          type="button"
+          onClick={() => removeItemRow(index)}
+          className="text-red-600 hover:underline text-sm md:col-span-3 text-left"
+        >
+          Remove
+        </button>
+      )}
+    </div>
+  );
+})}
+
             <button
               type="button"
               onClick={addItemRow}

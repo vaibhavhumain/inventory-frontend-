@@ -42,8 +42,8 @@ export default function InvoiceItemsTable({
         subQuantity: "",
         subQuantityMeasurement: "",
         hsnCode: "",
-        rate: "",
         gstRate: "",
+        rate: "",
         amount: 0,
         gstAmount: 0,
         total: 0,
@@ -55,6 +55,45 @@ export default function InvoiceItemsTable({
   const removeItem = (index) => {
     const newItems = [...items];
     newItems.splice(index, 1);
+    setItems(newItems);
+  };
+
+  // 🧭 Handle item selection — auto-fill HSN, GST, Unit
+  const handleItemSelect = (idx, value) => {
+    if (value === "__new__") {
+      if (onAddNewItem) onAddNewItem(idx);
+      return;
+    }
+
+    const selected = allItems.find(
+      (i) => i._id === value || i.code === value
+    );
+
+    if (!selected) return;
+
+    const newItems = [...items];
+    newItems[idx] = {
+      ...newItems[idx],
+      item: value,
+      headDescription: selected?.headDescription || "",
+      subDescription: selected?.subDescription || "",
+      description: selected?.subDescription || "",
+      hsnCode: selected?.hsnCode || "",
+      gstRate: selected?.gstRate || 0, // ✅ auto-fill GST
+      headQuantityMeasurement: selected?.unit || "",
+      subQuantityMeasurement: selected?.unit || "",
+    };
+
+    // Recalculate totals if any quantity/rate already exists
+    const subQty = parseFloat(newItems[idx].subQuantity) || 0;
+    const rate = parseFloat(newItems[idx].rate) || 0;
+    const amount = subQty * rate;
+    const gstAmt = (amount * (selected?.gstRate || 0)) / 100;
+
+    newItems[idx].amount = amount;
+    newItems[idx].gstAmount = gstAmt;
+    newItems[idx].total = amount + gstAmt;
+
     setItems(newItems);
   };
 
@@ -96,33 +135,7 @@ export default function InvoiceItemsTable({
                 <select
                   className="w-full border rounded p-1"
                   value={it.item}
-                  onChange={(e) => {
-                    const value = e.target.value;
-
-                    if (value === "__new__") {
-                      if (onAddNewItem) onAddNewItem(idx);
-                      return;
-                    }
-
-                    const selected = allItems.find(
-                      (i) => i._id === value || i.code === value
-                    );
-
-                    const newItems = [...items];
-                    newItems[idx] = {
-                      ...newItems[idx],
-                      item: value,
-                      description: selected?.subDescription || "",
-                      headDescription: selected?.headDescription || "",
-                      subDescription: selected?.subDescription || "",
-                      // ✅ auto-fill HSN only if backend provides it
-                      hsnCode: selected?.hsnCode || newItems[idx].hsnCode,
-                      headQuantityMeasurement: selected?.unit || "",
-                      subQuantityMeasurement: selected?.unit || "",
-                    };
-
-                    setItems(newItems);
-                  }}
+                  onChange={(e) => handleItemSelect(idx, e.target.value)}
                 >
                   <option value="">--Select Item--</option>
                   {allItems.map((i) => (
@@ -143,9 +156,9 @@ export default function InvoiceItemsTable({
               <td className="border px-2 py-1">
                 <input
                   className="w-full border rounded p-1"
-                  value={it.description}
+                  value={it.subDescription}
                   onChange={(e) =>
-                    handleItemChange(idx, "description", e.target.value)
+                    handleItemChange(idx, "subDescription", e.target.value)
                   }
                 />
               </td>
@@ -218,15 +231,12 @@ export default function InvoiceItemsTable({
                 </select>
               </td>
 
-              {/* 🧾 HSN Code (editable but auto-filled if available) */}
-              <td className="border px-2 py-1">
+              {/* 🧾 HSN Code (auto-filled) */}
+              <td className="border px-2 py-1 text-center">
                 <input
-                  className="w-full border rounded p-1 text-center"
-                  placeholder="Enter HSN"
+                  className="w-full border rounded p-1 bg-gray-100 text-gray-600 text-center"
                   value={it.hsnCode}
-                  onChange={(e) =>
-                    handleItemChange(idx, "hsnCode", e.target.value)
-                  }
+                  readOnly
                 />
               </td>
 
@@ -236,9 +246,7 @@ export default function InvoiceItemsTable({
                   type="number"
                   className="w-full border rounded p-1 text-right"
                   value={it.rate}
-                  onChange={(e) =>
-                    handleItemChange(idx, "rate", e.target.value)
-                  }
+                  onChange={(e) => handleItemChange(idx, "rate", e.target.value)}
                 />
               </td>
 
@@ -247,15 +255,13 @@ export default function InvoiceItemsTable({
                 {it.amount.toFixed(2)}
               </td>
 
-              {/* GST Rate */}
-              <td className="border px-2 py-1">
+              {/* GST Rate (auto-filled) */}
+              <td className="border px-2 py-1 text-right">
                 <input
                   type="number"
-                  className="w-full border rounded p-1 text-right"
+                  className="w-full border rounded p-1 bg-gray-100 text-gray-600 text-right"
                   value={it.gstRate}
-                  onChange={(e) =>
-                    handleItemChange(idx, "gstRate", e.target.value)
-                  }
+                  readOnly
                 />
               </td>
 

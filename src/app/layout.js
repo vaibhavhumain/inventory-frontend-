@@ -1,6 +1,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import GlobalLogger from "../../components/GlobalLogger"; // ✅ Import the client-side logger
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -16,11 +18,13 @@ export const metadata = {
   description: "Manage stock feed and issue",
 };
 
- export default function RootLayout({ children }) {
+export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Toaster position="top-right" richColors closeButton />
+        {/* ✅ Safe client-side logger here */}
+        <GlobalLogger />
         {children}
       </body>
     </html>

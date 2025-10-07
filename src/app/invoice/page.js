@@ -5,6 +5,7 @@ import VendorModal from "../../../components/VendorModal";
 import InvoiceItemsTable from "../../../components/InvoiceItemsTable";
 import NewItemModal from "../../../components/NewItemModal";
 import API from "../../../utils/api";
+import { frontendLog } from "../../../utils/logger"; 
 import {toast} from "sonner";
 export default function InvoiceFormPage() {
   const [invoiceNumber, setInvoiceNumber] = useState("");
@@ -119,87 +120,46 @@ export default function InvoiceFormPage() {
   }, [items, beforeTaxAmount, beforeTaxPercent, beforeTaxGstRate, otherChargesAfterTax]);
 
 const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!vendorId) {
-    toast.error("Please select a vendor before saving the invoice.");
-    return;
-  }
+    if (!vendorId) {
+      toast.error("Please select a vendor before saving the invoice.");
+      await frontendLog("warn", "Invoice submission blocked - vendor not selected");
+      return;
+    }
 
-  const cleanItems = items.map(({ isNew, amount, gstAmount, total, ...rest }) => ({
-    ...rest,
-    headDescription: rest.headDescription || rest.description || "",
-    subDescription: rest.subDescription || "",
-    headQuantity: Number(rest.headQuantity) || 0,
-    subQuantity: Number(rest.subQuantity) || 0,
-    rate: Number(rest.rate) || 0,
-    gstRate: Number(rest.gstRate) || 0,
-  }));
+    const payload = {
+      invoiceNumber,
+      partyName,
+      vendor: vendorId,
+      date,
+      remarks,
+      items,
+      otherChargesBeforeTaxAmount: Number(beforeTaxAmount),
+      otherChargesBeforeTaxGstRate: Number(beforeTaxGstRate),
+      otherChargesAfterTax: Number(otherChargesAfterTax),
+    };
 
-  const payload = {
-    invoiceNumber,
-    partyName,
-    vendor: vendorId,
-    date,
-    remarks,
-    items: cleanItems,
-    otherChargesBeforeTaxAmount: Number(beforeTaxAmount),
-    otherChargesBeforeTaxPercent: Number(beforeTaxPercent),
-    otherChargesBeforeTaxGstRate: Number(beforeTaxGstRate),
-    otherChargesAfterTax: Number(otherChargesAfterTax),
+    await frontendLog("info", "Attempting to save invoice", { invoiceNumber, vendorId });
+
+    await toast.promise(
+      API.post("/purchase-invoices", payload),
+      {
+        loading: "Saving invoice...",
+        success: async (res) => {
+          await frontendLog("info", "Invoice saved successfully", { id: res.data._id });
+          return "Invoice saved successfully!";
+        },
+        error: async (err) => {
+          await frontendLog("error", "Invoice save failed", {
+            error: err.response?.data || err.message,
+          });
+          return "Save failed!";
+        },
+      },
+      { position: "top-right", duration: 4000 }
+    );
   };
-
-  console.log("Submitting payload:", payload);
-
-  await toast.promise(
-    API.post("/purchase-invoices", payload),
-    {
-      loading: "Saving invoice...",
-      success: (res) => {
-        console.log("Saved:", res.data);
-        setTimeout(() => {
-          setInvoiceNumber("");
-          setPartyName("");
-          setVendorId("");
-          setRemarks("");
-          setBeforeTaxAmount(0);
-          setBeforeTaxPercent(0);
-          setBeforeTaxGstRate(0);
-          setOtherChargesAfterTax(0);
-          setItems([
-            {
-              item: "",
-              description: "",
-              headDescription: "",
-              subDescription: "",
-              headQuantity: "",
-              headQuantityMeasurement: "",
-              subQuantity: "",
-              subQuantityMeasurement: "",
-              hsnCode: "",
-              rate: "",
-              gstRate: "",
-              amount: 0,
-              gstAmount: 0,
-              total: 0,
-            },
-          ]);
-          setTotalTaxableValue(0);
-          setGstTotal(0);
-          setTotalInvoiceValue(0);
-          setBeforeTaxBase(0);
-          setBeforeTaxGst(0);
-        }, 1000);
-        return "Invoice saved successfully!";
-      },
-      error: (err) => {
-        console.error("Error saving invoice:", err.response?.data || err.message);
-        return err.response?.data?.error || "Save failed!";
-      },
-    },
-    { position: "top-right", duration: 4000 }
-  );
-};
 
 
 
@@ -225,22 +185,23 @@ const handleSubmit = async (e) => {
               <label className="block font-semibold mb-1">Party Name</label>
               <div className="flex gap-2">
                 <select
-                  value={vendorId}
-                  onChange={(e) => {
-                    const selectedVendor = vendors.find((v) => v._id === e.target.value);
-                    setVendorId(e.target.value);
-                    setPartyName(selectedVendor?.name || "");
-                  }}
-                  className="border p-2 rounded focus:ring focus:ring-blue-200"
-                  required
-                >
-                  <option value="">-- Select Vendor --</option>
-                  {vendors.map((v) => (
-                    <option key={v._id} value={v._id}>
-                      {v.name}
-                    </option>
-                  ))}
-                </select>
+  value={vendorId}
+  onChange={(e) => {
+    const selectedVendor = vendors.find((v) => v._id === e.target.value);
+    setVendorId(e.target.value);
+    setPartyName(selectedVendor?.name || "");
+  }}
+  className="border p-2 rounded focus:ring focus:ring-blue-200"
+  required
+>
+  <option value="">-- Select Vendor --</option>
+  {vendors.map((v) => (
+    <option key={v._id} value={v._id}>
+      {`${v.name} (${v.code})`}
+    </option>
+  ))}
+</select>
+
                 <button
                   type="button"
                   onClick={() => setShowVendorModal(true)}
@@ -297,6 +258,7 @@ const handleSubmit = async (e) => {
                     headDescription: newItem.headDescription,
                     subDescription: newItem.subDescription || "",
                     hsnCode: newItem.hsnCode || "",
+                    gstRate: newItem.gstRate || 0,
                     subQuantityMeasurement: newItem.unit || "",
                   };
                   return updated;

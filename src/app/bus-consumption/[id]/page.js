@@ -23,13 +23,19 @@ export default function BusConsumptionDetailPage() {
     fetchBus();
   }, [id]);
 
-  if (loading) {
-    return <p className="text-center mt-10 text-gray-600">Loading details...</p>;
-  }
+  if (loading)
+    return (
+      <p className="text-center mt-10 text-gray-600">
+        Loading details...
+      </p>
+    );
 
-  if (!bus) {
-    return <p className="text-center mt-10 text-gray-500 italic">No details found</p>;
-  }
+  if (!bus)
+    return (
+      <p className="text-center mt-10 text-gray-500 italic">
+        No details found
+      </p>
+    );
 
   return (
     <div className="min-h-screen bg-gray-50 px-6 py-8">
@@ -59,12 +65,15 @@ export default function BusConsumptionDetailPage() {
                   {bill.department || "-"}
                 </p>
               </div>
+
               <div className="p-3 bg-white shadow-sm rounded border">
                 <p className="text-gray-500">Issued By</p>
                 <p className="font-medium text-gray-800">
-                  {bill.issuedBy || "-"}
+                  {/* ✅ Safely handle structure: issuedBy.name or string fallback */}
+                  {bill.issuedBy?.name || bill.issuedBy || "-"}
                 </p>
               </div>
+
               <div className="p-3 bg-white shadow-sm rounded border">
                 <p className="text-gray-500">Date</p>
                 <p className="font-medium text-gray-800">
@@ -79,6 +88,7 @@ export default function BusConsumptionDetailPage() {
             <h3 className="text-lg font-semibold text-gray-700 mb-3">
               Items Consumed
             </h3>
+
             {bill.items && bill.items.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm border border-gray-300">
@@ -113,13 +123,17 @@ export default function BusConsumptionDetailPage() {
                         </td>
                       </tr>
                     ))}
+
                     {/* Summary Row */}
                     <tr className="font-semibold bg-gray-100">
                       <td colSpan={4} className="px-3 py-2 border text-right">
                         Total
                       </td>
                       <td className="px-3 py-2 border text-right">
-                        {bill.items.reduce((sum, it) => sum + (it.quantity || 0), 0)}
+                        {bill.items.reduce(
+                          (sum, it) => sum + (it.quantity || 0),
+                          0
+                        )}
                       </td>
                       <td className="px-3 py-2 border text-right">
                         ₹{bill.totalAmount || 0}

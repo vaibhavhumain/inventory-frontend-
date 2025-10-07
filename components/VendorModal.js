@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import API from "../utils/api";
+import { toast } from "sonner"; // ✅ import sonner
 
 export default function VendorModal({ onClose, onSave }) {
   const [name, setName] = useState("");
@@ -11,7 +12,7 @@ export default function VendorModal({ onClose, onSave }) {
 
   const handleSave = async () => {
     if (!name) {
-      alert("Vendor Name is required");
+      toast.error("Vendor name is required");
       return;
     }
 
@@ -20,11 +21,18 @@ export default function VendorModal({ onClose, onSave }) {
     try {
       setLoading(true);
       const res = await API.post("/vendors", payload);
-      onSave(res.data); // new vendor with auto-generated code
+
+      toast.success(`Vendor "${res.data.name}" added successfully!`);
+      onSave(res.data);
       onClose();
     } catch (err) {
       console.error("Error adding vendor:", err.response?.data || err.message);
-      alert(`Error: ${err.response?.data?.error || "Failed to add vendor"}`);
+
+      const errorMsg =
+        err.response?.data?.error ||
+        "Failed to add vendor. Please try again.";
+
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -36,7 +44,7 @@ export default function VendorModal({ onClose, onSave }) {
         <h2 className="text-xl font-bold mb-4">Add New Vendor</h2>
 
         <div className="space-y-3">
-          {/* Vendor Code is auto-generated, no input here */}
+          {/* Vendor Code is auto-generated */}
 
           <div>
             <label className="block font-semibold">Vendor Name</label>
@@ -79,8 +87,8 @@ export default function VendorModal({ onClose, onSave }) {
             <input
               type="text"
               value={gstNumber}
-              required
               onChange={(e) => setGstNumber(e.target.value)}
+              required
               className="w-full border p-2 rounded"
               placeholder="Enter GST number"
             />
@@ -90,7 +98,6 @@ export default function VendorModal({ onClose, onSave }) {
             <button
               type="button"
               onClick={onClose}
-              
               className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
             >
               Cancel
