@@ -4,6 +4,7 @@ import Navbar from "../../../components/Navbar";
 import API from "../../../utils/api";
 import SearchBar from "../../../components/SearchBar";
 import Link from "next/link";
+import BackButton from "../../../components/BackButton";
 
 export default function ItemsPage() {
   const [items, setItems] = useState([]);
@@ -143,6 +144,7 @@ export default function ItemsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+      <BackButton />
       <div className="max-w-[98%] mx-auto px-4 py-6">
         <div className="mb-6">
           <SearchBar onSearch={handleSearch} />

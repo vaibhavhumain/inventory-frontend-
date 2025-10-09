@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"; 
 import Navbar from "../../../components/Navbar";
 import API from "../../../utils/api";
+import BackButton from "../../../components/BackButton";
 
 export default function BusConsumptionHistoryPage() {
   const [history, setHistory] = useState([]);
@@ -27,6 +28,7 @@ export default function BusConsumptionHistoryPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+      <BackButton />
       <div className="max-w-[95%] mx-auto px-4 py-6">
         {loading ? (
           <p className="text-center text-gray-500">Loading history...</p>

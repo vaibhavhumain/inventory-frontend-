@@ -3,35 +3,56 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../../../components/Navbar";
 import API from "../../../utils/api";
 import SearchBar from "../../../components/SearchBar";
+import BackButton from "../../../components/BackButton";
 
 export default function StockSummaryPage() {
   const [summary, setSummary] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       try {
-        // ✅ Fetch summary and items in parallel
         const [summaryRes, itemsRes] = await Promise.all([
           API.get("/stock/summary"),
           API.get("/items"),
         ]);
 
+        const summaryData = summaryRes.data || [];
+        const itemsData = itemsRes.data || [];
+
+        // ✅ Keep only latest entry per item
+        const latestSummaryMap = {};
+        summaryData.forEach((row) => {
+          const current = latestSummaryMap[row.itemId];
+          if (
+            !current ||
+            new Date(row.date || row.updatedAt || 0) >
+              new Date(current.date || current.updatedAt || 0)
+          ) {
+            latestSummaryMap[row.itemId] = row;
+          }
+        });
+        const latestSummaries = Object.values(latestSummaryMap);
+
+        // ✅ Merge item details
         const itemsMap = {};
-        itemsRes.data.forEach((it) => {
+        itemsData.forEach((it) => {
           itemsMap[it._id] = {
             code: it.code,
             headDescription: it.headDescription,
+            uqc: it.unit || it.uqc || "-",
           };
         });
 
-        // ✅ Merge item info into summary
-        const enriched = (summaryRes.data || []).map((row) => ({
+        const enriched = latestSummaries.map((row) => ({
           ...row,
           code: itemsMap[row.itemId]?.code || "-",
           headDescription: itemsMap[row.itemId]?.headDescription || "-",
+          uqc: itemsMap[row.itemId]?.uqc || "-",
         }));
 
         setSummary(enriched);
@@ -42,12 +63,14 @@ export default function StockSummaryPage() {
         setLoading(false);
       }
     }
+
     fetchData();
   }, []);
 
+  // 🔍 Keyword search
   const handleSearch = (query) => {
     if (!query.trim()) {
-      setFiltered(summary);
+      setFiltered(applyDateFilter(summary));
       return;
     }
     const lower = query.toLowerCase();
@@ -56,19 +79,67 @@ export default function StockSummaryPage() {
         (val) => val && String(val).toString().toLowerCase().includes(lower)
       )
     );
-    setFiltered(results);
+    setFiltered(applyDateFilter(results));
   };
+
+  // 📅 Apply date filter logic
+  const applyDateFilter = (data) => {
+    if (!fromDate && !toDate) return data;
+    const from = fromDate ? new Date(fromDate) : null;
+    const to = toDate ? new Date(toDate) : null;
+
+    return data.filter((item) => {
+      const itemDate = new Date(item.date || item.updatedAt);
+      if (from && itemDate < from) return false;
+      if (to && itemDate > to) return false;
+      return true;
+    });
+  };
+
+  // 🧭 Re-apply filter whenever date range changes
+  useEffect(() => {
+    setFiltered(applyDateFilter(summary));
+  }, [fromDate, toDate, summary]);
 
   const formatCurrency = (num) => (num ? `₹${Number(num).toFixed(2)}` : "₹0");
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
+      <BackButton />
       <div className="max-w-[98%] mx-auto px-4 py-6">
-        <SearchBar
-          onSearch={handleSearch}
-          placeholder="Search by item, code, date, qty, amount..."
-        />
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+          <SearchBar
+            onSearch={handleSearch}
+            placeholder="Search by item, code, date, qty, amount..."
+          />
+
+          {/* 📅 Date Filter */}
+          <div className="flex items-center gap-3 bg-white border border-gray-300 rounded-lg p-3 shadow-sm">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                From Date
+              </label>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="border p-1 rounded text-sm focus:ring focus:ring-blue-200"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                To Date
+              </label>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="border p-1 rounded text-sm focus:ring focus:ring-blue-200"
+              />
+            </div>
+          </div>
+        </div>
 
         {loading ? (
           <p className="text-center text-gray-500">Loading summary...</p>
@@ -76,11 +147,7 @@ export default function StockSummaryPage() {
           <div className="bg-white rounded-lg shadow border border-gray-300 overflow-x-auto">
             <table className="w-full text-xs border-collapse text-center">
               <thead>
-                {/* 🔹 Row 1 - Group Headers */}
                 <tr className="font-bold text-white text-sm">
-                  <th rowSpan="2" className="border px-2 py-2 bg-gray-700">
-                    Date
-                  </th>
                   <th colSpan="6" className="border px-2 py-2 bg-green-600">
                     Inventory Info
                   </th>
@@ -96,32 +163,27 @@ export default function StockSummaryPage() {
                   <th colSpan="2" className="border px-2 py-2 bg-purple-600">
                     Sale
                   </th>
-                  <th colSpan="4" className="border px-2 py-2 bg-emerald-600">
+                  <th colSpan="5" className="border px-2 py-2 bg-emerald-600">
                     Closing Inventory
                   </th>
                 </tr>
 
-                {/* 🔹 Row 2 - Column Headers */}
                 <tr className="bg-gray-800 text-white">
                   <th className="border px-2 py-2">Item Code</th>
                   <th className="border px-2 py-2">Description</th>
+                  <th className="border px-2 py-2">UQC</th>
                   <th className="border px-2 py-2">Opening (Main)</th>
                   <th className="border px-2 py-2">Opening (Sub)</th>
                   <th className="border px-2 py-2">Opening Total</th>
                   <th className="border px-2 py-2">Opening Amount</th>
-
                   <th className="border px-2 py-2">Purchase Qty</th>
                   <th className="border px-2 py-2">Purchase Amt</th>
-
                   <th className="border px-2 py-2">Issue Qty</th>
                   <th className="border px-2 py-2">Issue Amt</th>
-
                   <th className="border px-2 py-2">Qty</th>
                   <th className="border px-2 py-2">Amount</th>
-
                   <th className="border px-2 py-2">Qty</th>
                   <th className="border px-2 py-2">Amount</th>
-
                   <th className="border px-2 py-2">Closing (Main)</th>
                   <th className="border px-2 py-2">Closing (Sub)</th>
                   <th className="border px-2 py-2">Closing Total</th>
@@ -136,41 +198,31 @@ export default function StockSummaryPage() {
                       key={index}
                       className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                     >
-                      <td className="border px-2 py-2">
-                        {row.date
-                          ? new Date(row.date).toLocaleDateString("en-IN")
-                          : "-"}
-                      </td>
                       <td className="border px-2 py-2">{row.code}</td>
                       <td className="border px-2 py-2">{row.headDescription}</td>
-
+                      <td className="border px-2 py-2">{row.uqc || "-"}</td>
                       <td className="border px-2 py-2">{row.openingMain}</td>
                       <td className="border px-2 py-2">{row.openingSub}</td>
                       <td className="border px-2 py-2">{row.openingTotal}</td>
                       <td className="border px-2 py-2">
                         {formatCurrency(row.openingAmount)}
                       </td>
-
                       <td className="border px-2 py-2">{row.purchaseQty}</td>
                       <td className="border px-2 py-2">
                         {formatCurrency(row.purchaseAmt)}
                       </td>
-
                       <td className="border px-2 py-2">{row.issueQty}</td>
                       <td className="border px-2 py-2">
                         {formatCurrency(row.issueAmt)}
                       </td>
-
                       <td className="border px-2 py-2">{row.consumptionQty}</td>
                       <td className="border px-2 py-2">
                         {formatCurrency(row.consumptionAmt)}
                       </td>
-
                       <td className="border px-2 py-2">{row.saleQty}</td>
                       <td className="border px-2 py-2">
                         {formatCurrency(row.saleAmt)}
                       </td>
-
                       <td className="border px-2 py-2">{row.closingMain}</td>
                       <td className="border px-2 py-2">{row.closingSub}</td>
                       <td className="border px-2 py-2">{row.closingTotal}</td>
@@ -185,7 +237,7 @@ export default function StockSummaryPage() {
                       colSpan="19"
                       className="text-center py-6 text-gray-500 italic"
                     >
-                      No data found
+                      No data found for selected date range
                     </td>
                   </tr>
                 )}

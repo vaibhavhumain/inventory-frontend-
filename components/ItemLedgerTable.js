@@ -5,6 +5,7 @@ import API from "../utils/api";
 export default function ItemLedgerTable({ itemId }) {
   const [ledger, setLedger] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showFullLedger, setShowFullLedger] = useState(false);
 
   useEffect(() => {
     if (!itemId) return;
@@ -28,12 +29,26 @@ export default function ItemLedgerTable({ itemId }) {
     return <p className="text-gray-500 italic">No ledger data</p>;
   }
 
+  // ✅ Show only last 3 entries by default
+  const visibleLedger = showFullLedger ? ledger : ledger.slice(-1);
+
   return (
     <div className="bg-white shadow rounded-lg p-4 mb-6">
-      <h2 className="font-semibold text-gray-700 mb-3">
-        Stock Ledger (Per Day)
-      </h2>
-      <div className="overflow-x-auto">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-semibold text-gray-700">
+          Stock Ledger (Per Day)
+        </h2>
+        {ledger.length > 1 && (
+          <button
+            onClick={() => setShowFullLedger(!showFullLedger)}
+            className="text-sm text-blue-600 font-medium hover:underline"
+          >
+            {showFullLedger ? "Hide Detailed Ledger ▲" : "View Detailed Ledger ▼"}
+          </button>
+        )}
+      </div>
+
+      <div className="overflow-x-auto transition-all duration-300 ease-in-out">
         <table className={tableClass}>
           <thead>
             <tr>
@@ -57,12 +72,14 @@ export default function ItemLedgerTable({ itemId }) {
             </tr>
           </thead>
           <tbody>
-            {ledger.map((row, i) => (
+            {visibleLedger.map((row, i) => (
               <tr
                 key={i}
                 className={`${i % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-yellow-50`}
               >
-                <td className={tdClass}>{row.date}</td>
+                <td className={tdClass}>
+                  {new Date(row.date).toLocaleDateString("en-IN")}
+                </td>
                 <td className={tdClass}>{row.openingMain}</td>
                 <td className={tdClass}>{row.openingSub}</td>
                 <td className={tdClass}>{row.openingTotal}</td>

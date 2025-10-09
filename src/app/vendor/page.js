@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import API from "../../../utils/api";
 import Navbar from "../../../components/Navbar";
+import BackButton from "../../../components/BackButton";
 export default function VendorsPage() {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,6 +26,9 @@ export default function VendorsPage() {
           {/* ✅ Combined Navbar + Page Header */}
           <div className="bg-white shadow sticky top-0 z-20">
             <Navbar />
+            <div>
+            <BackButton />
+            </div>
             <div className="px-8 py-4 border-t border-gray-200 flex justify-center">
 
             </div>

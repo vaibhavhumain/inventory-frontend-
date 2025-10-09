@@ -8,7 +8,6 @@ export default function InvoiceItemsTable({
   unitOptions,
   onAddNewItem,
 }) {
-  // 🧮 Handle field updates and total calculations
   const handleItemChange = (index, field, value) => {
     const newItems = [...items];
     newItems[index][field] = value;
@@ -28,7 +27,6 @@ export default function InvoiceItemsTable({
     setItems(newItems);
   };
 
-  // ➕ Add new row
   const addItem = () => {
     setItems([
       ...items,
@@ -51,14 +49,12 @@ export default function InvoiceItemsTable({
     ]);
   };
 
-  // ❌ Remove a row
   const removeItem = (index) => {
     const newItems = [...items];
     newItems.splice(index, 1);
     setItems(newItems);
   };
 
-  // 🧭 Handle item selection — auto-fill HSN, GST, Unit
   const handleItemSelect = (idx, value) => {
     if (value === "__new__") {
       if (onAddNewItem) onAddNewItem(idx);
@@ -79,12 +75,11 @@ export default function InvoiceItemsTable({
       subDescription: selected?.subDescription || "",
       description: selected?.subDescription || "",
       hsnCode: selected?.hsnCode || "",
-      gstRate: selected?.gstRate || 0, // ✅ auto-fill GST
+      gstRate: selected?.gstRate || 0,
       headQuantityMeasurement: selected?.unit || "",
       subQuantityMeasurement: selected?.unit || "",
     };
 
-    // Recalculate totals if any quantity/rate already exists
     const subQty = parseFloat(newItems[idx].subQuantity) || 0;
     const rate = parseFloat(newItems[idx].rate) || 0;
     const amount = subQty * rate;
@@ -130,7 +125,6 @@ export default function InvoiceItemsTable({
         <tbody>
           {items.map((it, idx) => (
             <tr key={idx} className="hover:bg-gray-50">
-              {/* 🔹 Item Dropdown */}
               <td className="border px-2 py-1">
                 <select
                   className="w-full border rounded p-1"
@@ -140,7 +134,7 @@ export default function InvoiceItemsTable({
                   <option value="">--Select Item--</option>
                   {allItems.map((i) => (
                     <option key={i._id || i.code} value={i._id || i.code}>
-                      {i.headDescription}
+                      {i.code ? `${i.code} - ${i.headDescription}` : i.headDescription}
                     </option>
                   ))}
                   <option
@@ -152,7 +146,6 @@ export default function InvoiceItemsTable({
                 </select>
               </td>
 
-              {/* 🔹 Sub Description */}
               <td className="border px-2 py-1">
                 <input
                   className="w-full border rounded p-1"
@@ -163,7 +156,6 @@ export default function InvoiceItemsTable({
                 />
               </td>
 
-              {/* Head Quantity */}
               <td className="border px-2 py-1">
                 <input
                   type="number"
@@ -175,7 +167,6 @@ export default function InvoiceItemsTable({
                 />
               </td>
 
-              {/* Head UQC */}
               <td className="border px-2 py-1">
                 <select
                   className="w-full border rounded p-1"
@@ -197,7 +188,6 @@ export default function InvoiceItemsTable({
                 </select>
               </td>
 
-              {/* Sub Quantity */}
               <td className="border px-2 py-1">
                 <input
                   type="number"
@@ -209,7 +199,6 @@ export default function InvoiceItemsTable({
                 />
               </td>
 
-              {/* Sub UQC */}
               <td className="border px-2 py-1">
                 <select
                   className="w-full border rounded p-1"
@@ -231,7 +220,6 @@ export default function InvoiceItemsTable({
                 </select>
               </td>
 
-              {/* 🧾 HSN Code (auto-filled) */}
               <td className="border px-2 py-1 text-center">
                 <input
                   className="w-full border rounded p-1 bg-gray-100 text-gray-600 text-center"
@@ -240,7 +228,6 @@ export default function InvoiceItemsTable({
                 />
               </td>
 
-              {/* Rate */}
               <td className="border px-2 py-1">
                 <input
                   type="number"
@@ -250,12 +237,10 @@ export default function InvoiceItemsTable({
                 />
               </td>
 
-              {/* Taxable */}
               <td className="border px-2 py-1 text-right">
                 {it.amount.toFixed(2)}
               </td>
 
-              {/* GST Rate (auto-filled) */}
               <td className="border px-2 py-1 text-right">
                 <input
                   type="number"
@@ -265,17 +250,14 @@ export default function InvoiceItemsTable({
                 />
               </td>
 
-              {/* GST TAX */}
               <td className="border px-2 py-1 text-right">
                 {it.gstAmount.toFixed(2)}
               </td>
 
-              {/* TOTAL */}
               <td className="border px-2 py-1 text-right font-semibold">
                 {it.total.toFixed(2)}
               </td>
 
-              {/* Actions */}
               <td className="border px-2 py-1 text-center">
                 <button
                   type="button"

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Navbar from "../../../components/Navbar";
 import InvoiceDetailModal from "../../../components/InvoiceDetailModal";
+import BackButton from "../../../components/BackButton";
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState([]);
@@ -29,6 +30,7 @@ export default function InvoicesPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow sticky top-0 z-20">
         <Navbar />
+        <BackButton/>
         <div className="px-8 py-4 border-t border-gray-200 flex justify-center">
 
         </div>

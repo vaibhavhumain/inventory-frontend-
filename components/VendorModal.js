@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import API from "../utils/api";
-import { toast } from "sonner"; // ✅ import sonner
+import { toast } from "sonner"; 
 
 export default function VendorModal({ onClose, onSave }) {
   const [name, setName] = useState("");
@@ -47,7 +47,10 @@ export default function VendorModal({ onClose, onSave }) {
           {/* Vendor Code is auto-generated */}
 
           <div>
-            <label className="block font-semibold">Vendor Name</label>
+            <label className="block font-semibold">
+              Vendor Name{" "}
+              <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               value={name}
@@ -59,7 +62,10 @@ export default function VendorModal({ onClose, onSave }) {
           </div>
 
           <div>
-            <label className="block font-semibold">Address</label>
+            <label className="block font-semibold">
+              Address{" "}
+              <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               value={address}
@@ -71,7 +77,10 @@ export default function VendorModal({ onClose, onSave }) {
           </div>
 
           <div>
-            <label className="block font-semibold">State</label>
+            <label className="block font-semibold">
+              State{" "}
+              <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               value={state}
@@ -83,7 +92,10 @@ export default function VendorModal({ onClose, onSave }) {
           </div>
 
           <div>
-            <label className="block font-semibold">GST Number</label>
+            <label className="block font-semibold">
+              GST Number{" "}
+              <span className="text-red-500">*</span>
+            </label>
             <input
               type="text"
               value={gstNumber}

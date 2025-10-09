@@ -1,22 +1,32 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation"; 
+import { useParams, useRouter } from "next/navigation";
 import API from "../../../../utils/api";
 import ItemLedgerTable from "../../../../components/ItemLedgerTable";
 
 export default function ItemOverviewPage() {
   const params = useParams();
-  const router = useRouter();   
+  const router = useRouter();
   const itemId = params.id;
 
   const [data, setData] = useState(null);
+  const [ledger, setLedger] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showFullHistory, setShowFullHistory] = useState(false);
 
   useEffect(() => {
     if (!itemId) return;
-    API.get(`/items/${itemId}/overview`)
-      .then((res) => setData(res.data))
-      .catch((err) => console.error("Error loading overview:", err))
+
+    // Fetch overview + ledger together
+    Promise.all([
+      API.get(`/items/${itemId}/overview`),
+      API.get(`/items/${itemId}/ledger`),
+    ])
+      .then(([overviewRes, ledgerRes]) => {
+        setData(overviewRes.data);
+        setLedger(ledgerRes.data.ledger || []);
+      })
+      .catch((err) => console.error("Error loading item overview:", err))
       .finally(() => setLoading(false));
   }, [itemId]);
 
@@ -29,12 +39,18 @@ export default function ItemOverviewPage() {
 
   if (!data) return <div className="p-6">No data</div>;
 
-  const {
-    item,
-    vendors,
-    stock,
-    purchaseHistory,
-  } = data;
+  const { item, purchaseHistory = [] } = data;
+
+  // ✅ Latest closing values from ledger
+  const latestLedger = ledger.length ? ledger[ledger.length - 1] : {};
+  const mainQty = latestLedger?.closingMain || 0;
+  const subQty = latestLedger?.closingSub || 0;
+  const totalQty = latestLedger?.closingTotal || mainQty + subQty;
+
+  // ✅ Show only 3 latest purchase entries by default
+  const visibleHistory = showFullHistory
+    ? purchaseHistory
+    : purchaseHistory.slice(0, 1);
 
   const tableClass = "w-full border text-xs border-collapse table-fixed";
   const thClass =
@@ -45,7 +61,7 @@ export default function ItemOverviewPage() {
     <div className="bg-gray-50 min-h-screen p-6 text-sm">
       {/* Back Button */}
       <button
-        onClick={() => router.push("/items")}  
+        onClick={() => router.push("/items")}
         className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
       >
         ← Back to Items
@@ -53,48 +69,38 @@ export default function ItemOverviewPage() {
 
       {/* Header */}
       <div className="bg-white shadow rounded-lg p-6 mb-6 grid grid-cols-3 gap-6">
-        <div>
-          <h1 className="text-xl font-bold text-gray-800">
+        <div className="flex flex-col items-start justify-center">
+          <h1 className="text-xl font-bold text-gray-800 mb-1">
             {item.headDescription}
           </h1>
           <p className="text-gray-600">Group: {item.category}</p>
-          <p className="font-medium text-blue-600">
-            Closing Balance: {stock.currentStock} {item.unit}
-          </p>
-        </div>
-        <div>
           <p>
-            <span className="font-semibold">Cost Price:</span>{" "}
-            {vendors.length > 0 ? `₹${vendors[0].avgRate?.toFixed(2)}` : "-"}
-          </p>
-          <p>
-            <span className="font-semibold">Avg. Cost:</span>{" "}
-            {vendors.length > 0 ? `₹${vendors[0].avgRate?.toFixed(2)}` : "-"}
-          </p>
-          <p>
-            <span className="font-semibold">Standard Cost:</span> –
-          </p>
-        </div>
-        <div>
-          <p>
-            <span className="font-semibold">Part No:</span> –
+            <span className="font-semibold text-indigo-600">Total Qty:</span>{" "}
+            {totalQty} {item.unit}
           </p>
           <p>
             <span className="font-semibold">HSN Code:</span>{" "}
             {item.hsnCode || "-"}
           </p>
-          <p>
-            <span className="font-semibold">Remarks:</span>{" "}
-            {item.remarks || "-"}
-          </p>
         </div>
       </div>
 
-      {/* Detailed Purchase History */}
+      {/* Purchase History (Fresh + Expandable) */}
       <div className="bg-white shadow rounded-lg p-4 mb-6">
-        <h2 className="font-semibold text-gray-700 mb-3">
-          Purchase History (Detailed)
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold text-gray-700">
+            Purchase History ({showFullHistory ? "Detailed" : "Recent"})
+          </h2>
+          {purchaseHistory.length > 1 && (
+            <button
+              onClick={() => setShowFullHistory(!showFullHistory)}
+              className="text-sm text-blue-600 font-medium hover:underline"
+            >
+              {showFullHistory ? "Hide Details ▲" : "View Detailed History ▼"}
+            </button>
+          )}
+        </div>
+
         <div className="overflow-x-auto">
           <table className={tableClass}>
             <thead>
@@ -108,8 +114,8 @@ export default function ItemOverviewPage() {
               </tr>
             </thead>
             <tbody>
-              {purchaseHistory?.length > 0 ? (
-                purchaseHistory.map((inv, i) =>
+              {visibleHistory.length > 0 ? (
+                visibleHistory.map((inv, i) =>
                   inv.items
                     .filter((it) => it.item?._id?.toString() === itemId)
                     .map((it, j) => (
@@ -135,28 +141,28 @@ export default function ItemOverviewPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Hint when collapsed */}
+        {!showFullHistory && purchaseHistory.length > 3 && (
+          <p className="text-xs text-gray-500 italic mt-2">
+            Showing last 3 entries. Click “View Detailed History” to see all.
+          </p>
+        )}
       </div>
 
       {/* ✅ Ledger Table */}
       <ItemLedgerTable itemId={itemId} />
 
-      {/* Bottom: Location + Category */}
-      <div className="grid grid-cols-2 gap-6">
+      {/* ✅ Stock Summary */}
+      <div className="grid grid-cols-2 gap-6 mt-6">
         <div className="bg-white shadow rounded-lg p-4">
-          <h2 className="font-semibold text-gray-700 mb-2">Location / Batch</h2>
-          <p>Location: Main Store</p>
-          <p>
-            Quantity: {stock.currentStock} {item.unit}
+          <h2 className="font-semibold text-gray-700 mb-2">Stock Summary</h2>
+          <p>Main Store: {mainQty} {item.unit}</p>
+          <p>Sub-Store: {subQty} {item.unit}</p>
+          <p className="font-medium text-blue-700 mt-1">
+            Total: {totalQty} {item.unit}
           </p>
-        </div>
-        <div className="bg-white shadow rounded-lg p-4">
-          <h2 className="font-semibold text-gray-700 mb-2">
-            Items of Same Category
-          </h2>
-          <p className="text-gray-600">
-            (Later you can load from backend: all items where category ={" "}
-            {item.category})
-          </p>
+          <p className="text-gray-500 text-xs mt-1">Location: Main & Sub Store</p>
         </div>
       </div>
     </div>

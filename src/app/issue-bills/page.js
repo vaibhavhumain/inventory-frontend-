@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import API from "../../../utils/api";
 import Navbar from "../../../components/Navbar";
+import BackButton from "../../../components/BackButton";
 
 export default function IssueBillsPage() {
   const [bills, setBills] = useState([]);
@@ -39,6 +40,7 @@ export default function IssueBillsPage() {
   return (
     <div>
       <Navbar />
+      <BackButton />
       <div className="max-w-[95%] mx-auto mt-8 bg-white border rounded-lg shadow p-6">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold text-gray-800">Issue Bills History</h1>

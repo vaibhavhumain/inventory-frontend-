@@ -5,9 +5,9 @@ import VendorModal from "../../../components/VendorModal";
 import InvoiceItemsTable from "../../../components/InvoiceItemsTable";
 import NewItemModal from "../../../components/NewItemModal";
 import API from "../../../utils/api";
+import BackButton from "../../../components/BackButton";  
 import { frontendLog } from "../../../utils/logger"; 
 import {toast} from "sonner";
-import { Link } from "lucide-react"; 
 export default function InvoiceFormPage() {
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [partyName, setPartyName] = useState("");
@@ -16,12 +16,11 @@ export default function InvoiceFormPage() {
   const [remarks, setRemarks] = useState("");
   const [vendors, setVendors] = useState([]);
   const [showVendorModal, setShowVendorModal] = useState(false);
-
+  const [mannualInvoiceDate, setMannualInvoiceDate] = useState("");
   const [beforeTaxAmount, setBeforeTaxAmount] = useState(0);
   const [beforeTaxPercent, setBeforeTaxPercent] = useState(0);
   const [beforeTaxGstRate, setBeforeTaxGstRate] = useState(0);
   const [otherChargesAfterTax, setOtherChargesAfterTax] = useState(0);
-
   const [allItems, setAllItems] = useState([]);
   const [showNewItemModal, setShowNewItemModal] = useState(false);
 
@@ -68,7 +67,6 @@ export default function InvoiceFormPage() {
   const [beforeTaxBase, setBeforeTaxBase] = useState(0);
   const [beforeTaxGst, setBeforeTaxGst] = useState(0);
 
-  // Fetch vendors
   useEffect(() => {
     async function fetchVendors() {
       try {
@@ -81,7 +79,6 @@ export default function InvoiceFormPage() {
     fetchVendors();
   }, []);
 
-  // Fetch items
   useEffect(() => {
     async function fetchItems() {
       try {
@@ -94,7 +91,6 @@ export default function InvoiceFormPage() {
     fetchItems();
   }, []);
 
-  // Totals
   useEffect(() => {
     let taxable = 0;
     let gst = 0;
@@ -134,6 +130,7 @@ const handleSubmit = async (e) => {
       partyName,
       vendor: vendorId,
       date,
+      mannualInvoiceDate,
       remarks,
       items,
       otherChargesBeforeTaxAmount: Number(beforeTaxAmount),
@@ -162,77 +159,87 @@ const handleSubmit = async (e) => {
     );
   };
 
-
-
   return (
     <div>
       <Navbar />
+      <BackButton />
       <div className="p-8 bg-gray-50 min-h-screen w-full">
 
         <form onSubmit={handleSubmit} className="bg-white shadow-xl rounded-lg p-6 w-full">
           {/* Header */}
-          <div className="grid grid-cols-3 gap-6 mb-6">
-            <div>
-              <label className="block font-semibold mb-1">Invoice Number</label>
-              <input
-                type="text"
-                value={invoiceNumber}
-                onChange={(e) => setInvoiceNumber(e.target.value)}
-                className="w-full border p-2 rounded focus:ring focus:ring-blue-200"
-                required
-              />
-            </div>
-            <div>
-              <label className="block font-semibold mb-1">Party Name</label>
-              <div className="flex gap-2">
-                <select
-  value={vendorId}
-  onChange={(e) => {
-    const selectedVendor = vendors.find((v) => v._id === e.target.value);
-    setVendorId(e.target.value);
-    setPartyName(selectedVendor?.name || "");
-  }}
-  className="border p-2 rounded focus:ring focus:ring-blue-200"
-  required
->
-  <option value="">-- Select Vendor --</option>
-  {vendors.map((v) => (
-    <option key={v._id} value={v._id}>
-      {`${v.name} (${v.code})`}
-    </option>
-  ))}
-</select>
+         <div className="grid grid-cols-4 gap-4 mb-6 items-end">
+  <div>
+    <label className="block font-semibold mb-1">Invoice Number</label>
+    <input
+      type="text"
+      value={invoiceNumber}
+      onChange={(e) => setInvoiceNumber(e.target.value)}
+      className="w-full border p-2 rounded focus:ring focus:ring-blue-200"
+      required
+    />
+  </div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowVendorModal(true)}
-                  className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                >
-                  + Add
-                </button>
-              </div>
+  <div>
+    <label className="block font-semibold mb-1">Party Name</label>
+    <div className="flex gap-2">
+      <select
+        value={vendorId}
+        onChange={(e) => {
+          const selectedVendor = vendors.find((v) => v._id === e.target.value);
+          setVendorId(e.target.value);
+          setPartyName(selectedVendor?.name || "");
+        }}
+        className="border p-2 rounded focus:ring focus:ring-blue-200"
+        required
+      >
+        <option value="">-- Select Vendor --</option>
+        {vendors.map((v) => (
+          <option key={v._id} value={v._id}>
+            {`${v.code} - ${v.name}`}
+          </option>
+        ))}
+      </select>
+      <button
+        type="button"
+        onClick={() => setShowVendorModal(true)}
+        className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+      >
+        + Add
+      </button>
+    </div>
+    {showVendorModal && (
+      <VendorModal
+        onClose={() => setShowVendorModal(false)}
+        onSave={(newVendor) => {
+          setVendors((prev) => [...prev, newVendor]);
+          setVendorId(newVendor._id);
+          setPartyName(newVendor.name);
+        }}
+      />
+    )}
+  </div>
 
-              {showVendorModal && (
-                <VendorModal
-                  onClose={() => setShowVendorModal(false)}
-                  onSave={(newVendor) => {
-                    setVendors((prev) => [...prev, newVendor]);
-                    setVendorId(newVendor._id);
-                    setPartyName(newVendor.name);
-                  }}
-                />
-              )}
-            </div>
-            <div>
-              <label className="block font-semibold mb-1">Date</label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full border p-2 rounded focus:ring focus:ring-blue-200"
-              />
-            </div>
-          </div>
+  <div>
+    <label className="block font-semibold mb-1">Date</label>
+    <input
+      type="date"
+      value={date}
+      onChange={(e) => setDate(e.target.value)}
+      className="w-50 border p-2 rounded focus:ring focus:ring-blue-200"
+    />
+  </div>
+
+  <div>
+    <label className="block font-semibold mb-1">Invoice Date</label>
+    <input
+      type="date"
+      value={mannualInvoiceDate}
+      onChange={(e) => setMannualInvoiceDate(e.target.value)}
+      className="w-80 border p-2 rounded focus:ring focus:ring-blue-200"
+    />
+  </div>
+</div>
+
 
           {/* Items Table */}
           <InvoiceItemsTable
