@@ -103,6 +103,13 @@ export default function StockSummaryPage() {
 
   const formatCurrency = (num) => (num ? `₹${Number(num).toFixed(2)}` : "₹0");
 
+  // 🔹 Clear Date Filters
+  const clearDateFilters = () => {
+    setFromDate("");
+    setToDate("");
+    setFiltered(summary);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -114,8 +121,8 @@ export default function StockSummaryPage() {
             placeholder="Search by item, code, date, qty, amount..."
           />
 
-          {/* 📅 Date Filter */}
-          <div className="flex items-center gap-3 bg-white border border-gray-300 rounded-lg p-3 shadow-sm">
+          {/* 📅 Date Filter Section */}
+          <div className="flex items-end gap-3 bg-white border border-gray-300 rounded-lg p-3 shadow-sm">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
                 From Date
@@ -138,6 +145,12 @@ export default function StockSummaryPage() {
                 className="border p-1 rounded text-sm focus:ring focus:ring-blue-200"
               />
             </div>
+            <button
+              onClick={clearDateFilters}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm px-3 py-2 rounded-md mt-4 transition"
+            >
+              Clear Dates
+            </button>
           </div>
         </div>
 

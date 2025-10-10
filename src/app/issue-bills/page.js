@@ -75,10 +75,10 @@ export default function IssueBillsPage() {
                     Bus (Bus Code - Owner Name)
                   </th>
                   <th className="border px-3 py-2 text-left">Issued By</th>
-                  <th className="border px-3 py-2 text-left">Items</th>
+                  <th className="border px-3 py-2 text-left">Items (with Rate)</th>
                   <th className="border px-3 py-2 text-center">Qty</th>
-                  <th className="border px-3 py-2 text-center">UQC</th>
                   <th className="border px-3 py-2 text-center">Rate</th>
+                  <th className="border px-3 py-2 text-center">UQC</th>
                   <th className="border px-3 py-2 text-center">Amount</th>
                 </tr>
               </thead>
@@ -118,11 +118,14 @@ export default function IssueBillsPage() {
                       {bill.issuedBy?.name || "Unknown"}
                     </td>
 
-                    {/* Items */}
+                    {/* Items (with Rate inline) */}
                     <td className="border px-3 py-2">
                       {bill.items?.map((it, i) => (
                         <div key={i} className="text-gray-700">
-                          • {it.item?.headDescription || "Item"}
+                          • {it.item?.headDescription || "Item"}{" "}
+                          <span className="text-gray-500 text-xs">
+                            (₹{Number(it.rate || 0).toFixed(2)})
+                          </span>
                         </div>
                       ))}
                     </td>
@@ -133,20 +136,11 @@ export default function IssueBillsPage() {
                         ?.reduce((sum, it) => sum + Number(it.quantity || 0), 0)
                         .toFixed(2) || "0.00"}
                     </td>
+                    <td className="border px-3 py-2 text-center"> {bill.items ?.reduce( (sum, it) => sum + Number(it.rate || 0), 0 ) .toFixed(2) || "0.00"} </td>
 
                     {/* UQC */}
                     <td className="border px-3 py-2 text-center">
                       {bill.items?.[0]?.item?.unit || "-"}
-                    </td>
-
-                    {/* Rate */}
-                    <td className="border px-3 py-2 text-center">
-                      {bill.items
-                        ?.reduce(
-                          (sum, it) => sum + Number(it.rate || 0),
-                          0
-                        )
-                        .toFixed(2) || "0.00"}
                     </td>
 
                     {/* Amount */}
