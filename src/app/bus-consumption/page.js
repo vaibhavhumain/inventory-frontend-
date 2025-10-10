@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 import Navbar from "../../../components/Navbar";
 import API from "../../../utils/api";
 import BackButton from "../../../components/BackButton";
@@ -38,31 +38,35 @@ export default function BusConsumptionHistoryPage() {
               <thead>
                 <tr className="bg-green-700 text-white text-xs uppercase">
                   <th className="border px-3 py-2 w-[120px]">Bus Code</th>
-                  <th className="border px-3 py-2 w-[140px]">Issued To</th>
+                  <th className="border px-3 py-2 w-[160px]">Chassis No</th>
+                  <th className="border px-3 py-2 w-[160px]">Engine No</th>
+                  <th className="border px-3 py-2 w-[160px]">Owner Name</th>
                 </tr>
               </thead>
               <tbody>
                 {history.length > 0 ? (
-                  history.map((bus, index) => {
-                    // ✅ show first issueBill (or "-" if none)
-                    const firstIssue = bus.issueBills?.[0] || {};
-                    return (
-                      <tr
-                        key={bus._id}
-                        onClick={() => router.push(`/bus-consumption/${bus._id}`)} 
-                        className={`cursor-pointer ${
-                          index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                        } hover:bg-blue-100 transition`}
-                      >
-                        <td className="border px-3 py-2 font-medium text-gray-700 text-center">
-                          {bus.busCode}
-                        </td>
-                        <td className="border px-3 py-2 text-center">
-                          {firstIssue.issuedTo || "-"}
-                        </td>
-                      </tr>
-                    );
-                  })
+                  history.map((bus, index) => (
+                    <tr
+                      key={bus._id}
+                      onClick={() => router.push(`/bus-consumption/${bus._id}`)}
+                      className={`cursor-pointer ${
+                        index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      } hover:bg-blue-100 transition`}
+                    >
+                      <td className="border px-3 py-2 font-medium text-gray-700 text-center">
+                        {bus.busCode || "-"}
+                      </td>
+                      <td className="border px-3 py-2 text-center">
+                        {bus.chassisNo || "-"}
+                      </td>
+                      <td className="border px-3 py-2 text-center">
+                        {bus.engineNo || "-"}
+                      </td>
+                      <td className="border px-3 py-2 text-center">
+                        {bus.ownerName || "-"}
+                      </td>
+                    </tr>
+                  ))
                 ) : (
                   <tr>
                     <td

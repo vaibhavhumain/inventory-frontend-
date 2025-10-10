@@ -24,11 +24,7 @@ export default function BusConsumptionDetailPage() {
   }, [id]);
 
   if (loading)
-    return (
-      <p className="text-center mt-10 text-gray-600">
-        Loading details...
-      </p>
-    );
+    return <p className="text-center mt-10 text-gray-600">Loading details...</p>;
 
   if (!bus)
     return (
@@ -37,8 +33,10 @@ export default function BusConsumptionDetailPage() {
       </p>
     );
 
+  const allBills = bus.issueBills || [];
+
   return (
-    <div className="min-h-screen bg-gray-50 px-6 py-8">
+    <div className="min-h-screen bg-white px-8 py-8">
       {/* Back Button */}
       <button
         onClick={() => history.back()}
@@ -48,108 +46,115 @@ export default function BusConsumptionDetailPage() {
         ← Back
       </button>
 
-      {/* Report Title */}
-      <h2 className="text-3xl font-bold text-blue-700 mb-8 border-b pb-3">
+      {/* Title */}
+      <h2 className="text-3xl font-bold text-blue-700 mb-8 border-b-2 border-blue-600 pb-2">
         Bus Consumption Report
       </h2>
 
-      {/* Loop through each issueBill */}
-      {bus.issueBills && bus.issueBills.length > 0 ? (
-        bus.issueBills.map((bill, idx) => (
-          <div key={bill._id || idx} className="mb-10">
-            {/* Header Info */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm mb-6 w-full">
-              <div className="p-3 bg-white shadow-sm rounded border">
-                <p className="text-gray-500">Department</p>
-                <p className="font-medium text-gray-800">
-                  {bill.department || "-"}
-                </p>
-              </div>
+      {/* === Header Table === */}
+      <table className="w-full border border-gray-400 mb-6 text-sm">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="border px-3 py-2 text-left">Bus Code</th>
+            <th className="border px-3 py-2 text-left">Chassis No</th>
+            <th className="border px-3 py-2 text-left">Engine No</th>
+            <th className="border px-3 py-2 text-left">Customer Name</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="bg-yellow-100 font-medium">
+            <td className="border px-3 py-2">{bus.busCode || "-"}</td>
+            <td className="border px-3 py-2">{bus.chassisNo || "-"}</td>
+            <td className="border px-3 py-2">{bus.engineNo || "-"}</td>
+            <td className="border px-3 py-2">{bus.ownerName || "-"}</td>
+          </tr>
+        </tbody>
+      </table>
 
-              <div className="p-3 bg-white shadow-sm rounded border">
-                <p className="text-gray-500">Issued By</p>
-                <p className="font-medium text-gray-800">
-                  {/* ✅ Safely handle structure: issuedBy.name or string fallback */}
-                  {bill.issuedBy?.name || bill.issuedBy || "-"}
-                </p>
-              </div>
+      {/* === Items Table === */}
+      <table className="w-full border border-gray-400 text-sm">
+        <thead>
+          <tr className="bg-gray-100 text-gray-800 font-semibold">
+            <th className="border px-3 py-2 text-left w-[120px]">Date</th>
+            <th className="border px-3 py-2 text-left">Item Code–Description</th>
+            <th className="border px-3 py-2 text-center w-[100px]">Quantity</th>
+            <th className="border px-3 py-2 text-center w-[100px]">Rate</th>
+            <th className="border px-3 py-2 text-center w-[120px]">Amount</th>
+          </tr>
+        </thead>
 
-              <div className="p-3 bg-white shadow-sm rounded border">
-                <p className="text-gray-500">Date</p>
-                <p className="font-medium text-gray-800">
-                  {bill.issueDate
-                    ? new Date(bill.issueDate).toLocaleDateString("en-IN")
-                    : "-"}
-                </p>
-              </div>
-            </div>
+        <tbody>
+          {allBills.length > 0 ? (
+            allBills.flatMap((bill) =>
+              bill.items.map((it, i) => (
+                <tr key={`${bill._id}-${i}`} className="hover:bg-gray-50">
+                  <td className="border px-3 py-2">
+                    {bill.issueDate
+                      ? new Date(bill.issueDate).toLocaleDateString("en-IN")
+                      : "-"}
+                  </td>
+                  <td className="border px-3 py-2">
+                    {`${it.code || "-"} ${it.description || ""}`}
+                  </td>
+                  <td className="border px-3 py-2 text-center">
+                    {it.quantity} {it.uqc || "pcs"}
+                  </td>
+                  <td className="border px-3 py-2 text-center">
+                    ₹{Number(it.rate || 0).toFixed(2)}
+                  </td>
+                  <td className="border px-3 py-2 text-right font-medium text-green-700">
+                    ₹{Number(it.amount || 0).toFixed(2)}
+                  </td>
+                </tr>
+              ))
+            )
+          ) : (
+            <tr>
+              <td
+                colSpan="5"
+                className="border px-3 py-4 text-center text-gray-500 italic"
+              >
+                No items consumed
+              </td>
+            </tr>
+          )}
 
-            {/* Items Table */}
-            <h3 className="text-lg font-semibold text-gray-700 mb-3">
-              Items Consumed
-            </h3>
-
-            {bill.items && bill.items.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm border border-gray-300">
-                  <thead>
-                    <tr className="bg-blue-600 text-white text-left">
-                      <th className="px-3 py-2 border">Bus Code</th>
-                      <th className="px-3 py-2 border">Code</th>
-                      <th className="px-3 py-2 border">Description</th>
-                      <th className="px-3 py-2 border">UQC</th>
-                      <th className="px-3 py-2 border text-right">Quantity</th>
-                      <th className="px-3 py-2 border text-right">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bill.items.map((it, i) => (
-                      <tr key={i} className="hover:bg-gray-50">
-                        <td className="px-3 py-2 border">{bus.busCode || "-"}</td>
-                        <td className="px-3 py-2 border">
-                          {it.code || it.item?.code || "-"}
-                        </td>
-                        <td className="px-3 py-2 border">
-                          {it.description || it.item?.headDescription || ""}
-                        </td>
-                        <td className="px-3 py-2 border">
-                          {it.uqc || it.item?.unit || "-"}
-                        </td>
-                        <td className="px-3 py-2 border text-right">
-                          {it.quantity}
-                        </td>
-                        <td className="px-3 py-2 border text-right">
-                          ₹{it.amount || 0}
-                        </td>
-                      </tr>
-                    ))}
-
-                    {/* Summary Row */}
-                    <tr className="font-semibold bg-gray-100">
-                      <td colSpan={4} className="px-3 py-2 border text-right">
-                        Total
-                      </td>
-                      <td className="px-3 py-2 border text-right">
-                        {bill.items.reduce(
-                          (sum, it) => sum + (it.quantity || 0),
-                          0
-                        )}
-                      </td>
-                      <td className="px-3 py-2 border text-right">
-                        ₹{bill.totalAmount || 0}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <p className="text-gray-500 mt-3 italic">No items recorded</p>
-            )}
-          </div>
-        ))
-      ) : (
-        <p className="text-gray-500 italic">No issue bills linked to this bus</p>
-      )}
+          {/* === Summary Row (Totals) === */}
+          {allBills.length > 0 && (
+            <tr className="bg-gray-100 font-semibold">
+              <td colSpan="2" className="border px-3 py-2 text-right">
+                Total
+              </td>
+              <td className="border px-3 py-2 text-center">
+                {allBills.reduce(
+                  (sum, bill) =>
+                    sum +
+                    bill.items.reduce(
+                      (s, it) => s + (Number(it.quantity) || 0),
+                      0
+                    ),
+                  0
+                )}
+              </td>
+              <td className="border px-3 py-2 text-center">—</td>
+              <td className="border px-3 py-2 text-right text-green-700">
+                ₹
+                {allBills
+                  .reduce(
+                    (sum, bill) =>
+                      sum +
+                      bill.items.reduce(
+                        (s, it) => s + (Number(it.amount) || 0),
+                        0
+                      ),
+                    0
+                  )
+                  .toFixed(2)}
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }

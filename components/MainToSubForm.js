@@ -13,7 +13,7 @@ export default function MainToSubForm() {
   const [issueDate, setIssueDate] = useState(
     new Date().toISOString().split("T")[0]
   );
-  const [items, setItems] = useState([{ item: "", quantity: "", rate: "" }]);
+  const [items, setItems] = useState([{ item: "", quantity: "", rate: "", amount: "" }]);
   const [allItems, setAllItems] = useState([]);
   const [userName, setUserName] = useState("");
   const [message, setMessage] = useState("");
@@ -23,7 +23,7 @@ export default function MainToSubForm() {
     const fetchData = async () => {
       try {
         const [itemsRes, summaryRes, userRes] = await Promise.all([
-          API.get("/items"),
+          API.get("/items"), // now includes lastPurchaseRate from backend
           API.get("/stock/summary"),
           API.get("/auth/profile"),
         ]);
@@ -57,14 +57,29 @@ export default function MainToSubForm() {
     fetchData();
   }, []);
 
-  // 🟢 Item Change
+  // 🟢 Item Change (auto-fill rate + calculate amount)
   const handleItemChange = (index, field, value) => {
     const updated = [...items];
     updated[index][field] = value;
+
+    // Auto-fill rate when item selected
+    if (field === "item") {
+      const selectedItem = allItems.find((i) => i._id === value);
+      if (selectedItem) {
+        updated[index].rate = selectedItem.lastPurchaseRate || 0;
+      }
+    }
+
+    // Auto-calculate amount
+    const qty = Number(updated[index].quantity || 0);
+    const rate = Number(updated[index].rate || 0);
+    updated[index].amount = qty * rate;
+
     setItems(updated);
   };
 
-  const addRow = () => setItems([...items, { item: "", quantity: "", rate: "" }]);
+  const addRow = () =>
+    setItems([...items, { item: "", quantity: "", rate: "", amount: "" }]);
   const removeRow = (i) => setItems(items.filter((_, idx) => idx !== i));
 
   // 🟢 Submit Handler
@@ -101,7 +116,7 @@ export default function MainToSubForm() {
       setVoucherNumber("");
       setVoucherDate(new Date().toISOString().split("T")[0]);
       setIssueDate(new Date().toISOString().split("T")[0]);
-      setItems([{ item: "", quantity: "", rate: "" }]);
+      setItems([{ item: "", quantity: "", rate: "", amount: "" }]);
     } catch (err) {
       console.error("Error creating issue bill:", err);
       setMessage("❌ " + (err.response?.data?.error || "Error creating bill"));
@@ -127,7 +142,7 @@ export default function MainToSubForm() {
           <div className="mt-1">
             <span className="font-medium">Issued By: </span>
             <span className="text-gray-700 font-semibold">
-            <strong> {userName || "Loading..."}</strong> 
+              <strong>{userName || "Loading..."}</strong>
             </span>
           </div>
         </div>
@@ -189,11 +204,6 @@ export default function MainToSubForm() {
               <tbody>
                 {items.map((it, idx) => {
                   const selected = allItems.find((a) => a._id === it.item);
-                  const amount =
-                    it.quantity && it.rate
-                      ? (it.quantity * it.rate).toFixed(2)
-                      : "";
-
                   return (
                     <tr key={idx}>
                       <td className="border px-3 py-1 text-center">{idx + 1}</td>
@@ -217,7 +227,9 @@ export default function MainToSubForm() {
                       </td>
 
                       <td className="border px-3 py-1 text-center text-green-600 font-semibold">
-                        {selected ? `${selected.mainStoreQty} ${selected.unit}` : "-"}
+                        {selected
+                          ? `${selected.mainStoreQty} ${selected.unit}`
+                          : "-"}
                       </td>
 
                       <td className="border px-3 py-1 text-center">
@@ -248,7 +260,7 @@ export default function MainToSubForm() {
                       </td>
 
                       <td className="border px-3 py-1 text-center text-green-700 font-medium">
-                        {amount}
+                        {it.amount ? it.amount.toFixed(2) : ""}
                       </td>
 
                       <td className="border px-3 py-1 text-center">

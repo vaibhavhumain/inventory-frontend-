@@ -119,7 +119,7 @@ export default function SubToSaleForm() {
       toast.error(err.response?.data?.error || "Error creating bill");
     }
   };
-
+ 
   return (
     <div>
       <Navbar />
@@ -138,7 +138,8 @@ export default function SubToSaleForm() {
             <span className="text-sm text-gray-600">Issued By:</span>
             <span className="text-gray-700 font-semibold ml-1">
               {userName || "Fetching..."}
-            </span>
+            </span> 
+                  
           </div>
         </div>
 

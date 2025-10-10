@@ -30,13 +30,10 @@ export default function InvoicesPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow sticky top-0 z-20">
         <Navbar />
-        <BackButton/>
-        <div className="px-8 py-4 border-t border-gray-200 flex justify-center">
-
-        </div>
+        <BackButton />
+        <div className="px-8 py-4 border-t border-gray-200 flex justify-center"></div>
       </div>
 
-      {/* ✅ Main Content */}
       <div className="p-8">
         {loading ? (
           <p className="text-center text-gray-500">Loading invoices...</p>
@@ -49,7 +46,8 @@ export default function InvoicesPage() {
                 <tr>
                   {[
                     "Invoice Number",
-                    "Date",
+                    "System Date",
+                    "Manual Invoice Date",
                     "Vendor",
                     "Party Name",
                     "Taxable Value",
@@ -66,6 +64,7 @@ export default function InvoicesPage() {
                   ))}
                 </tr>
               </thead>
+
               <tbody>
                 {invoices.map((inv) => {
                   const gstTax =
@@ -73,28 +72,50 @@ export default function InvoicesPage() {
                     (inv.totalTaxableValue || 0) -
                     (inv.otherChargesAfterTax || 0) -
                     (inv.otherChargesBeforeTaxAmount || 0);
-           
+
                   return (
                     <tr key={inv._id} className="hover:bg-gray-50">
                       <td className="border px-4 py-2">{inv.invoiceNumber}</td>
+
+                      {/* System Date */}
                       <td className="border px-4 py-2">
-                        {new Date(inv.date).toLocaleDateString()}
+                        {inv.date
+                          ? new Date(inv.date).toLocaleDateString("en-IN")
+                          : "-"}
                       </td>
+
+                      {/* Manual Invoice Date */}
+                      <td className="border px-4 py-2">
+                        {inv.manualInvoiceDate
+                          ? new Date(inv.manualInvoiceDate).toLocaleDateString(
+                              "en-IN"
+                            )
+                          : "—"}
+                      </td>
+
+                      {/* Vendor Info */}
                       <td className="border px-4 py-2">
                         {inv.vendor
-                          ? `${inv.vendor.code || ""} - ${inv.vendor.name || ""} (${inv.vendor.gstNumber || "No GST"})`
+                          ? `${inv.vendor.code || ""} - ${
+                              inv.vendor.name || ""
+                            } (${inv.vendor.gstNumber || "No GST"})`
                           : "N/A"}
                       </td>
+
                       <td className="border px-4 py-2">{inv.partyName}</td>
+
                       <td className="border px-4 py-2 text-right">
                         {inv.totalTaxableValue?.toFixed(2)}
                       </td>
+
                       <td className="border px-4 py-2 text-right">
                         {gstTax.toFixed(2)}
                       </td>
-                         <td className="border px-4 py-2 text-right font-semibold">
+
+                      <td className="border px-4 py-2 text-right font-semibold">
                         {inv.totalInvoiceValue?.toFixed(2)}
                       </td>
+
                       <td className="border px-4 py-2 text-center">
                         <button
                           onClick={() => setSelectedInvoice(inv)}
@@ -112,7 +133,7 @@ export default function InvoicesPage() {
         )}
       </div>
 
-      {/* ✅ Invoice Detail Modal */}
+      {/* Invoice Detail Modal */}
       {selectedInvoice && (
         <InvoiceDetailModal
           invoice={selectedInvoice}

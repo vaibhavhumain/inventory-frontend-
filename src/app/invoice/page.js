@@ -224,6 +224,7 @@ const handleSubmit = async (e) => {
     <input
       type="date"
       value={date}
+      readOnly
       onChange={(e) => setDate(e.target.value)}
       className="w-50 border p-2 rounded focus:ring focus:ring-blue-200"
     />

@@ -34,16 +34,15 @@ export default function IssueBillsPage() {
     else setFilteredBills(bills.filter((b) => b.type === type));
   };
 
-  // 🔹 Determine if we are viewing only MAIN_TO_SUB type
-  const hideColumns = filterType === "MAIN_TO_SUB";
-  const hideColumns2 = filterType === "SUB_TO_SALE";
   return (
     <div>
       <Navbar />
       <BackButton />
       <div className="max-w-[95%] mx-auto mt-8 bg-white border rounded-lg shadow p-6">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold text-gray-800">Issue Bills History</h1>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Issue Bills History
+          </h1>
           <select
             value={filterType}
             onChange={(e) => handleFilterChange(e.target.value)}
@@ -71,22 +70,16 @@ export default function IssueBillsPage() {
                 <tr>
                   <th className="border px-3 py-2 text-center">#</th>
                   <th className="border px-3 py-2 text-left">Date</th>
-                  <th className="border px-3 py-2 text-left">Department</th>
-                  <th className="border px-3 py-2 text-left">Type</th>
-
-                  {/* Conditionally render Issued To column */}
-                  {!hideColumns && (
-                    <th className="border px-3 py-2 text-left">Issued To</th>
-                  )}
-
-                  <th className="border px-3 py-2 text-left">Items</th>
-                  <th className="border px-3 py-2 text-right">Total Amount</th>
+                  <th className="border px-3 py-2 text-left">Voucher No.</th>
+                  <th className="border px-3 py-2 text-left">
+                    Bus (Bus Code - Owner Name)
+                  </th>
                   <th className="border px-3 py-2 text-left">Issued By</th>
-
-                  {/* Conditionally render Bus column */}
-                  {!hideColumns2 && (
-                    <th className="border px-3 py-2 text-center">Bus</th>
-                  )}
+                  <th className="border px-3 py-2 text-left">Items</th>
+                  <th className="border px-3 py-2 text-center">Qty</th>
+                  <th className="border px-3 py-2 text-center">UQC</th>
+                  <th className="border px-3 py-2 text-center">Rate</th>
+                  <th className="border px-3 py-2 text-center">Amount</th>
                 </tr>
               </thead>
 
@@ -98,51 +91,76 @@ export default function IssueBillsPage() {
                       idx % 2 === 0 ? "bg-white" : "bg-gray-50"
                     } hover:bg-gray-100 transition`}
                   >
+                    {/* # */}
                     <td className="border px-3 py-2 text-center">{idx + 1}</td>
+
+                    {/* Date */}
                     <td className="border px-3 py-2">
                       {new Date(bill.issueDate).toLocaleDateString("en-IN")}
                     </td>
-                    <td className="border px-3 py-2">{bill.department}</td>
+
+                    {/* Voucher No */}
                     <td className="border px-3 py-2">
-                      {bill.type === "MAIN_TO_SUB"
-                        ? "Main → Sub"
-                        : bill.type === "SUB_TO_USER"
-                        ? "Sub → User"
-                        : "Sub → Sale"}
+                      {bill.voucherNumber || "-"}
                     </td>
 
-                    {/* Show Issued To only if applicable */}
-                    {!hideColumns && (
-                      <td className="border px-3 py-2">
-                        {bill.issuedTo || "-"}
-                      </td>
-                    )}
-
+                    {/* Bus */}
                     <td className="border px-3 py-2">
-                      {bill.items?.map((it, i) => (
-                        <div key={i} className="text-gray-700">
-                          • {it.item?.headDescription || "Item"}{" "}
-                          <span className="text-gray-500">
-                            ({it.quantity} × ₹{it.rate})
-                          </span>
-                        </div>
-                      ))}
+                      {bill.bus
+                        ? `${bill.bus.busCode || "-"} - ${
+                            bill.bus.ownerName || "Unknown Owner"
+                          }`
+                        : "-"}
                     </td>
 
-                    <td className="border px-3 py-2 text-right font-medium text-green-700">
-                      ₹{bill.totalAmount?.toFixed(2) || "0.00"}
-                    </td>
-
+                    {/* Issued By */}
                     <td className="border px-3 py-2">
                       {bill.issuedBy?.name || "Unknown"}
                     </td>
 
-                    {/* Show Bus only if applicable */}
-                    {!hideColumns2 && (
-                      <td className="border px-3 py-2 text-center">
-                        {bill.bus?.busCode || "-"}
-                      </td>
-                    )}
+                    {/* Items */}
+                    <td className="border px-3 py-2">
+                      {bill.items?.map((it, i) => (
+                        <div key={i} className="text-gray-700">
+                          • {it.item?.headDescription || "Item"}
+                        </div>
+                      ))}
+                    </td>
+
+                    {/* Qty */}
+                    <td className="border px-3 py-2 text-center">
+                      {bill.items
+                        ?.reduce((sum, it) => sum + Number(it.quantity || 0), 0)
+                        .toFixed(2) || "0.00"}
+                    </td>
+
+                    {/* UQC */}
+                    <td className="border px-3 py-2 text-center">
+                      {bill.items?.[0]?.item?.unit || "-"}
+                    </td>
+
+                    {/* Rate */}
+                    <td className="border px-3 py-2 text-center">
+                      {bill.items
+                        ?.reduce(
+                          (sum, it) => sum + Number(it.rate || 0),
+                          0
+                        )
+                        .toFixed(2) || "0.00"}
+                    </td>
+
+                    {/* Amount */}
+                    <td className="border px-3 py-2 text-center text-green-700 font-medium">
+                      ₹
+                      {bill.items
+                        ?.reduce(
+                          (sum, it) =>
+                            sum +
+                            Number(it.quantity || 0) * Number(it.rate || 0),
+                          0
+                        )
+                        .toFixed(2) || "0.00"}
+                    </td>
                   </tr>
                 ))}
               </tbody>

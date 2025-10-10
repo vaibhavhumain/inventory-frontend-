@@ -8,7 +8,7 @@ export default function BackButton() {
 
   useEffect(() => {
     const handleKeyPress = (event) => {
-      if (event.key.toLowerCase() === "b") {
+      if (event.key.toLowerCase() === "x") {
         router.push("/dashboard");
       }
     };
