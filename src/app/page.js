@@ -62,7 +62,7 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="py-6 text-center text-sm text-gray-600 bg-white shadow-inner">
-        © {new Date().getFullYear()} Vaibhav. All rights reserved.
+        © {new Date().getFullYear()} Gobind Coach Builders. All rights reserved.
       </footer>
     </div>
   );

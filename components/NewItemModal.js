@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import API from "../utils/api";
-import { toast } from "sonner"; // ✅ Sonner import
+import { toast } from "sonner";
 
 export default function NewItemModal({ onClose, onSave }) {
   const [form, setForm] = useState({
@@ -12,25 +12,55 @@ export default function NewItemModal({ onClose, onSave }) {
     gstRate: "",
   });
 
+  const [categories, setCategories] = useState([]); 
   const [loading, setLoading] = useState(false);
+  const [showAddCat, setShowAddCat] = useState(false);
+  const [newCat, setNewCat] = useState({ label: "", prefix: "" });
+  const [savingCat, setSavingCat] = useState(false);
 
-  const categories = [
-    "raw material",
-    "consumables",
-    "bought out",
-    "hardware",
-    "electronics",
-    "electricals",
-    "paints",
-    "rubbers",
-    "chemicals",
-    "adhesive",
-    "plastics",
-    "furniture",
-  ];
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await API.get("/categories");
+        setCategories(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+        toast.error("Failed to load categories");
+      }
+    })();
+  }, []);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const saveCategory = async () => {
+    const label = newCat.label.trim();
+    const prefix = newCat.prefix.trim().toUpperCase();
+
+    if (!label || !prefix) {
+      toast.error("Please fill both label and prefix");
+      return;
+    }
+    if (!/^[A-Z]{2,4}$/.test(prefix)) {
+      toast.error("Prefix must be 2–4 uppercase letters (e.g., RM, HW, FG)");
+      return;
+    }
+
+    try {
+      setSavingCat(true);
+      const { data } = await API.post("/categories", { label, prefix });
+      setCategories((prev) => [...prev, data].sort((a, b) => a.label.localeCompare(b.label)));
+      setForm((prev) => ({ ...prev, category: data._id }));
+      setShowAddCat(false);
+      setNewCat({ label: "", prefix: "" });
+      toast.success(`Category "${data.label}" added successfully`);
+    } catch (err) {
+      console.error("Error saving category:", err);
+      toast.error(err.response?.data?.error || "Failed to add category");
+    } finally {
+      setSavingCat(false);
+    }
   };
 
   const handleSave = async () => {
@@ -38,7 +68,6 @@ export default function NewItemModal({ onClose, onSave }) {
       toast.error("Please fill all required fields");
       return;
     }
-
     if (form.gstRate && isNaN(form.gstRate)) {
       toast.error("GST Rate must be a number");
       return;
@@ -55,48 +84,92 @@ export default function NewItemModal({ onClose, onSave }) {
       };
 
       const res = await API.post("/items", payload);
-
       toast.success(`Item "${res.data.headDescription}" added successfully!`);
-      onSave(res.data);
-      onClose();
+      onSave?.(res.data);
+      onClose?.();
     } catch (err) {
-      console.error("Error adding item:", err.response?.data || err.message);
-
-      const errorMsg =
-        err.response?.data?.error || "Failed to add item. Please try again.";
-
-      toast.error(errorMsg);
+      console.error("Error adding item:", err);
+      toast.error(err.response?.data?.error || "Failed to add item");
     } finally {
       setLoading(false);
     }
   };
-
+  
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-[450px]">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-[500px]">
         <h2 className="text-2xl font-bold mb-4 text-blue-700">Add New Item</h2>
 
         <div className="space-y-4">
-          {/* Category */}
           <div>
-            <label className="block font-semibold">Category</label>
-            <select
-              name="category"
-              value={form.category}
-              onChange={handleChange}
-              className="w-full border p-2 rounded"
-              required
-            >
-              <option value="">-- Select Category --</option>
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+            <label className="block font-semibold mb-1">Category</label>
+            <div className="flex gap-2">
+              <select
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+                className="w-full border p-2 rounded"
+                required
+              >
+                <option value="">-- Select Category --</option>
+                {categories.map((cat) => (
+                  <option key={cat._id} value={cat._id}>
+                    {cat.label} ({cat.prefix})
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setShowAddCat((v) => !v)}
+                className="px-3 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700"
+              >
+                + New
+              </button>
+            </div>
+
+            {showAddCat && (
+              <div className="mt-3 grid grid-cols-3 gap-2 border p-3 rounded bg-gray-50">
+                <input
+                  type="text"
+                  placeholder="Label (e.g. Fiberglass)"
+                  value={newCat.label}
+                  onChange={(e) => setNewCat((p) => ({ ...p, label: e.target.value }))}
+                  className="col-span-2 border p-2 rounded"
+                />
+                <input
+                  type="text"
+                  placeholder="Prefix (e.g. FG)"
+                  value={newCat.prefix}
+                  onChange={(e) => setNewCat((p) => ({ ...p, prefix: e.target.value }))}
+                  className="border p-2 rounded"
+                  maxLength={4}
+                />
+                <div className="col-span-3 flex justify-end gap-2">
+                  <button
+                    onClick={() => {
+                      setShowAddCat(false);
+                      setNewCat({ label: "", prefix: "" });
+                    }}
+                    className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={saveCategory}
+                    disabled={savingCat}
+                    className={`px-3 py-2 rounded text-white ${
+                      savingCat
+                        ? "bg-green-400 cursor-not-allowed"
+                        : "bg-green-600 hover:bg-green-700"
+                    }`}
+                  >
+                    {savingCat ? "Saving..." : "Save Category"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Head Description */}
           <div>
             <label className="block font-semibold">Head Description</label>
             <input
@@ -110,7 +183,6 @@ export default function NewItemModal({ onClose, onSave }) {
             />
           </div>
 
-          {/* Sub Description */}
           <div>
             <label className="block font-semibold">Sub Description</label>
             <input
@@ -123,7 +195,6 @@ export default function NewItemModal({ onClose, onSave }) {
             />
           </div>
 
-          {/* HSN Code */}
           <div>
             <label className="block font-semibold">HSN Code</label>
             <input
@@ -136,7 +207,6 @@ export default function NewItemModal({ onClose, onSave }) {
             />
           </div>
 
-          {/* GST Rate */}
           <div>
             <label className="block font-semibold">GST Rate (%)</label>
             <input
@@ -151,7 +221,6 @@ export default function NewItemModal({ onClose, onSave }) {
             />
           </div>
 
-          {/* Buttons */}
           <div className="flex justify-end space-x-3 pt-4">
             <button
               type="button"
