@@ -30,6 +30,7 @@ export default function Navbar() {
         { href: "/issue-main-sub", label: "Main → Sub" },
         { href: "/issue-sub-user", label: "Sub → User" },
         { href: "/issue-sub-sale", label: "Sub → Sale" }, 
+        { href: "/issue-main-user", label: "Main → User" },
       ],
     },
     { href: "/items", label: "Items" },

@@ -81,8 +81,6 @@ export default function StockSummaryPage() {
     );
     setFiltered(applyDateFilter(results));
   };
-
-  // 📅 Apply date filter logic
   const applyDateFilter = (data) => {
     if (!fromDate && !toDate) return data;
     const from = fromDate ? new Date(fromDate) : null;
@@ -96,14 +94,12 @@ export default function StockSummaryPage() {
     });
   };
 
-  // 🧭 Re-apply filter whenever date range changes
   useEffect(() => {
     setFiltered(applyDateFilter(summary));
   }, [fromDate, toDate, summary]);
 
   const formatCurrency = (num) => (num ? `₹${Number(num).toFixed(2)}` : "₹0");
 
-  // 🔹 Clear Date Filters
   const clearDateFilters = () => {
     setFromDate("");
     setToDate("");

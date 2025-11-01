@@ -52,6 +52,7 @@ export default function IssueBillsPage() {
             <option value="MAIN_TO_SUB">Main → Sub</option>
             <option value="SUB_TO_USER">Sub → User</option>
             <option value="SUB_TO_SALE">Sub → Sale</option>
+            <option value="MAIN_TO_USER">Main → User</option>
           </select>
         </div>
 

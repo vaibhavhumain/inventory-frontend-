@@ -2,11 +2,13 @@
 import { useEffect, useState } from "react";
 import API from "../utils/api";
 import Navbar from "./Navbar";
+import BusInfo from "./BusInfo";
 import { toast } from "sonner";
 import BackButton from "./BackButton";
 
-export default function SubToSaleForm() {
+export default function MainToUserForm() {
   const [issuedTo, setIssuedTo] = useState("");
+  const [buses, setBuses] = useState([]);
   const [voucherNumber, setVoucherNumber] = useState("");
   const [voucherDate, setVoucherDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -15,18 +17,17 @@ export default function SubToSaleForm() {
     new Date().toISOString().split("T")[0]
   );
   const [items, setItems] = useState([
-    { item: "", quantity: "", rate: "", busId: "", otherReason: "" },
+    { item: "", quantity: "", rate: "", amount: "", busId: "" },
   ]);
   const [allItems, setAllItems] = useState([]);
-  const [buses, setBuses] = useState([]);
   const [userName, setUserName] = useState("");
-  const [message, setMessage] = useState("");
 
+  // 🟢 Fetch data
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [itemsRes, summaryRes, userRes, busesRes] = await Promise.all([
-          API.get("/items"),
+          API.get("/items"), // includes lastPurchaseRate (expected)
           API.get("/stock/summary"),
           API.get("/auth/profile"),
           API.get("/buses"),
@@ -55,94 +56,94 @@ export default function SubToSaleForm() {
         setUserName(userRes.data?.name || "");
         setBuses(busesRes.data || []);
       } catch (err) {
-        console.error("Error loading items or user:", err);
+        console.error("Error loading data:", err);
       }
     };
 
     fetchData();
   }, []);
 
+  // ✅ When new bus is added
+  const handleBusSaved = (savedBus) => {
+    setBuses((prev) => {
+      if (prev.find((b) => b._id === savedBus._id)) return prev;
+      return [...prev, savedBus];
+    });
+    toast.success(`Bus ${savedBus.busCode} added to list.`);
+  };
+
+  // ✅ Handle item/bus change (auto-fill rate + amount)
   const handleItemChange = (index, field, value) => {
     const updated = [...items];
+    updated[index][field] = value;
 
-    if (field === "busId") {
-      updated[index][field] = value;
-      if (value === "OTHER") {
-      } else {
-        const selectedBus = buses.find((b) => String(b._id) === String(value));
-        if (selectedBus?.ownerName) setIssuedTo(selectedBus.ownerName);
-        updated[index].otherReason = "";
+    if (field === "item") {
+      const selectedItem = allItems.find((i) => i._id === value);
+      if (selectedItem) {
+        updated[index].rate = selectedItem.lastPurchaseRate || 0;
       }
-      setItems(updated);
-      return;
     }
 
-    updated[index][field] = value;
+    const qty = Number(updated[index].quantity || 0);
+    const rate = Number(updated[index].rate || 0);
+    updated[index].amount = qty * rate;
+
     setItems(updated);
   };
 
   const addRow = () =>
-    setItems((prev) => [
-      ...prev,
-      { item: "", quantity: "", rate: "", busId: "", otherReason: "" },
-    ]);
+    setItems((prev) => [...prev, { item: "", quantity: "", rate: "", amount: "", busId: "" }]);
 
   const removeRow = (i) => setItems(items.filter((_, idx) => idx !== i));
 
+  // ✅ Submit Handler
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!issuedTo.trim()) {
-      toast.error("Please enter customer name.");
+      toast.error("Please enter Issued To.");
       return;
     }
 
-    for (const [idx, it] of items.entries()) {
-      if (!it.item || !it.quantity) {
-        toast.error(`Row ${idx + 1}: Select item and enter quantity.`);
-        return;
-      }
-      const hasBus = it.busId && it.busId !== "OTHER";
-      const hasOther = it.busId === "OTHER" && it.otherReason.trim().length > 0;
-      if (!hasBus && !hasOther) {
-        toast.error(
-          `Row ${idx + 1}: Choose a Bus or select Others and enter a reason.`
-        );
-        return;
-      }
+    if (!buses.length) {
+      toast.error("Please add at least one bus first.");
+      return;
+    }
+
+    if (items.some((it) => !it.item || !it.quantity || !it.busId)) {
+      toast.error("Please fill all item fields and select Bus Code.");
+      return;
     }
 
     const payload = {
-      issueDate: new Date(issueDate),
-      voucherNumber: voucherNumber || undefined,
-      voucherDate: new Date(voucherDate),
-      type: "SUB_TO_SALE",
-      department: "Sub Store",
-      issuedTo,
-      items: items.map((i) => ({
-        item: i.item,
-        quantity: Number(i.quantity),
-        rate: Number(i.rate || 0),
-        bus: i.busId && i.busId !== "OTHER" ? i.busId : null,
-        otherReason:
-          i.busId === "OTHER" && i.otherReason.trim().length > 0
-            ? i.otherReason.trim()
-            : undefined,
-      })),
+      issueDate,
+      voucherNumber,
+      voucherDate,
+      type: "MAIN_TO_USER",            // 👈 new flow
+      department: "Main Store",
+      issuedTo,                        // 👈 required for MAIN_TO_USER
+      items: items.map((i) => {
+        const selectedBus = buses.find(
+          (b) => b._id === i.busId || b.busCode === i.busId
+        );
+        return {
+          item: i.item,
+          quantity: Number(i.quantity),
+          rate: Number(i.rate || 0),
+          bus: selectedBus ? selectedBus._id : null, // used by /multi grouping
+        };
+      }),
     };
 
     try {
-      const { data } = await API.post("/issue-bills", payload);
+      const { data } = await API.post("/issue-bills/multi", payload);
       toast.success(data.message || "Issued successfully!");
       setIssuedTo("");
+      setItems([{ item: "", quantity: "", rate: "", amount: "", busId: "" }]);
       setVoucherNumber("");
-      setVoucherDate(new Date().toISOString().split("T")[0]);
-      setIssueDate(new Date().toISOString().split("T")[0]);
-      setItems([{ item: "", quantity: "", rate: "", busId: "", otherReason: "" }]);
-      setMessage("");
     } catch (err) {
-      console.error("Error creating issue bill:", err?.response?.data || err);
-      toast.error(err?.response?.data?.error || "Error creating bill");
+      console.error("Error creating issue bill:", err.response?.data || err);
+      toast.error(err.response?.data?.error || "Error creating bill.");
     }
   };
 
@@ -151,7 +152,7 @@ export default function SubToSaleForm() {
       <Navbar />
       <BackButton />
       <div className="max-w-full mx-auto mt-8 bg-white shadow-md p-6 rounded-lg border border-gray-200 relative">
-        {/* 🕓 Issue Bill Date (top-right) */}
+        {/* 🕓 Issue Bill Date + Issued By (top-right corner) */}
         <div className="absolute top-4 right-6 text-xs text-gray-500">
           <span className="mr-1 font-medium">Issue Bill Date:</span>
           <input
@@ -168,10 +169,11 @@ export default function SubToSaleForm() {
           </div>
         </div>
 
-        <h2 className="text-2xl font-bold mb-4 text-gray-800">Sub → Sale</h2>
+        {/* Header */}
+        <h2 className="text-3xl font-bold mb-4 text-gray-800">Main → User</h2>
 
-        {/* Voucher / Customer */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        {/* Voucher + Issued To */}
+        <div className="grid grid-cols-3 gap-6 mb-10">
           <div>
             <label className="text-sm text-gray-600">Voucher Number</label>
             <input
@@ -182,6 +184,7 @@ export default function SubToSaleForm() {
               className="border p-2 rounded w-full"
             />
           </div>
+
           <div>
             <label className="text-sm text-gray-600">Voucher Date</label>
             <input
@@ -191,11 +194,12 @@ export default function SubToSaleForm() {
               className="border p-2 rounded w-full"
             />
           </div>
+
           <div>
-            <label className="text-sm text-gray-600">Customer Name</label>
+            <label className="text-sm text-gray-600">Issued To</label>
             <input
               type="text"
-              placeholder="Enter Customer Name"
+              placeholder="Person / Department"
               value={issuedTo}
               onChange={(e) => setIssuedTo(e.target.value)}
               className="border p-2 rounded w-full"
@@ -203,6 +207,9 @@ export default function SubToSaleForm() {
             />
           </div>
         </div>
+
+        {/* Add Bus Section */}
+        <BusInfo onBusSaved={handleBusSaved} />
 
         {/* Items Table */}
         <form onSubmit={handleSubmit}>
@@ -212,10 +219,9 @@ export default function SubToSaleForm() {
                 <tr className="text-gray-700 font-semibold">
                   <th className="border px-3 py-2 text-center">#</th>
                   <th className="border px-3 py-2 text-center">Bus Code</th>
-                  <th className="border px-3 py-2 text-left">Item Name</th>
-                  <th className="border px-3 py-2 text-center">Available (Sub)</th>
+                  <th className="border px-3 py-2 text-left">Item</th>
+                  <th className="border px-3 py-2 text-center">Available (Main)</th>
                   <th className="border px-3 py-2 text-center">Qty</th>
-                  <th className="border px-3 py-2 text-center">Unit</th>
                   <th className="border px-3 py-2 text-center">Rate</th>
                   <th className="border px-3 py-2 text-center">Amount</th>
                   <th className="border px-3 py-2 text-center">Action</th>
@@ -225,51 +231,36 @@ export default function SubToSaleForm() {
               <tbody>
                 {items.map((it, idx) => {
                   const selected = allItems.find((a) => a._id === it.item);
-                  const amount =
-                    it.quantity && it.rate
-                      ? (Number(it.quantity) * Number(it.rate)).toFixed(2)
-                      : "";
-           
                   return (
                     <tr key={idx}>
                       <td className="border px-3 py-1 text-center">{idx + 1}</td>
 
-                      {/* Bus / Others */}
-                      <td className="border px-3 py-1">
+                      {/* Bus Code */}
+                      <td className="border px-3 py-1 text-center">
                         <select
                           value={it.busId}
-                          onChange={(e) => handleItemChange(idx, "busId", e.target.value)}
-                          className="border rounded p-1 text-sm w-full mb-1"
+                          onChange={(e) =>
+                            handleItemChange(idx, "busId", e.target.value)
+                          }
+                          className="border rounded p-1 text-sm w-full"
                           required
                         >
                           <option value="">Select Bus</option>
                           {buses.map((b) => (
                             <option key={b._id} value={b._id}>
-                              {b.busCode} - {b.ownerName || "No Owner"}
+                              {b.busCode} — {b.ownerName || "No Owner"}
                             </option>
                           ))}
-                          <option value="OTHER">Others</option>
                         </select>
-
-                        {/* Inline small input only when "OTHER" is selected */}
-                        {it.busId === "OTHER" && (
-                          <input
-                            type="text"
-                            value={it.otherReason}
-                            onChange={(e) =>
-                              handleItemChange(idx, "otherReason", e.target.value)
-                            }
-                            placeholder="Enter reason (e.g., walk-in sale, sample, testing, etc.)"
-                            className="border rounded p-1 text-xs w-full"
-                          />
-                        )}
                       </td>
 
                       {/* Item */}
                       <td className="border px-3 py-1">
                         <select
                           value={it.item}
-                          onChange={(e) => handleItemChange(idx, "item", e.target.value)}
+                          onChange={(e) =>
+                            handleItemChange(idx, "item", e.target.value)
+                          }
                           className="w-full border-none focus:ring-0 focus:outline-none"
                           required
                         >
@@ -282,40 +273,43 @@ export default function SubToSaleForm() {
                         </select>
                       </td>
 
-                      {/* Available (Sub) */}
-                      <td className="border px-3 py-1 text-center text-green-600 font-semibold">
-                        {selected ? `${selected.subStoreQty} ${selected.unit || ""}` : "-"}
+                      {/* Stock (Main) */}
+                      <td className="border px-3 py-1 text-center text-blue-600 font-semibold">
+                        {selected
+                          ? `${selected.mainStoreQty} ${selected.unit || ""}`
+                          : "-"}
                       </td>
 
                       {/* Qty */}
                       <td className="border px-3 py-1 text-center">
                         <input
                           type="number"
+                          min="0"
                           value={it.quantity}
-                          onChange={(e) => handleItemChange(idx, "quantity", e.target.value)}
+                          onChange={(e) =>
+                            handleItemChange(idx, "quantity", e.target.value)
+                          }
                           className="w-20 border-none text-center"
                           required
                         />
-                      </td>
-
-                      {/* Unit */}
-                      <td className="border px-3 py-1 text-center text-gray-600">
-                        {selected?.unit || "-"}
                       </td>
 
                       {/* Rate */}
                       <td className="border px-3 py-1 text-center">
                         <input
                           type="number"
+                          min="0"
                           value={it.rate}
-                          onChange={(e) => handleItemChange(idx, "rate", e.target.value)}
-                          className="w-24 border-none text-center"
+                          onChange={(e) =>
+                            handleItemChange(idx, "rate", e.target.value)
+                          }
+                          className="w-20 border-none text-center"
                         />
                       </td>
 
                       {/* Amount */}
                       <td className="border px-3 py-1 text-center text-green-700 font-medium">
-                        {amount}
+                        {it.amount ? Number(it.amount).toFixed(2) : ""}
                       </td>
 
                       {/* Remove */}
@@ -344,7 +338,7 @@ export default function SubToSaleForm() {
               onClick={addRow}
               className="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300 text-sm"
             >
-              ➕ Add Row
+              ➕ Add Item Row
             </button>
 
             <button
@@ -355,10 +349,6 @@ export default function SubToSaleForm() {
             </button>
           </div>
         </form>
-
-        {message && (
-          <p className="mt-4 text-center font-medium text-gray-700">{message}</p>
-        )}
       </div>
     </div>
   );
