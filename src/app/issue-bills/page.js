@@ -27,13 +27,13 @@ export default function IssueBillsPage() {
     fetchBills();
   }, []);
 
-  // 🔹 Filter by type
+
   const handleFilterChange = (type) => {
     setFilterType(type);
     if (type === "ALL") setFilteredBills(bills);
     else setFilteredBills(bills.filter((b) => b.type === type));
   };
-
+  
   return (
     <div>
       <Navbar />
@@ -55,8 +55,8 @@ export default function IssueBillsPage() {
             <option value="MAIN_TO_USER">Main → User</option>
           </select>
         </div>
-
-        {loading ? (
+                                                               
+        {loading? (    
           <p className="text-center text-gray-500 py-6">Loading issue bills...</p>
         ) : error ? (
           <p className="text-center text-red-500 py-6">{error}</p>
@@ -113,8 +113,6 @@ export default function IssueBillsPage() {
                           }`
                         : "-"}
                     </td>
-
-                    {/* Issued By */}
                     <td className="border px-3 py-2">
                       {bill.issuedBy?.name || "Unknown"}
                     </td>

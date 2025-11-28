@@ -161,7 +161,6 @@ export default function Register() {
                 className="w-full rounded-xl border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="user">User</option>
-                <option value="admin">Admin</option>
               </select>
             </div>
 
